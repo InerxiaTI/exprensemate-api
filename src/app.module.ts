@@ -1,6 +1,4 @@
 import { Logger, Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import configuration from '../config/configuration';
@@ -16,6 +14,13 @@ import { DetalleCierre } from './entities/detalle-cierre';
 import { IntegranteListaCompra } from './entities/integrante-lista-compra';
 import { ListaCompra } from './entities/lista-compra';
 import { Usuario } from './entities/usuario';
+import { CategoriaRepository } from './repositories/categoria.repository';
+import { CategoriaService } from './services/categoria.service';
+import { CompraRepository } from './repositories/compra.repository';
+import { DetalleCierreRepository } from './repositories/detalle-cierre.repository';
+import { IntegranteListaCompraRepository } from './repositories/integrante-lista-compra.repository';
+import { ListaCompraRepository } from './repositories/lista-compra.repository';
+import { UsuarioRepository } from './repositories/usuario.repository';
 
 @Module({
   imports: [
@@ -46,11 +51,23 @@ import { Usuario } from './entities/usuario';
       ],
       synchronize: false,
     }),
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([
+      Categoria,
+      CategoriaRepository,
+      Compra,
+      CompraRepository,
+      DetalleCierre,
+      DetalleCierreRepository,
+      IntegranteListaCompra,
+      IntegranteListaCompraRepository,
+      ListaCompra,
+      ListaCompraRepository,
+      Usuario,
+      UsuarioRepository,
+    ]),
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [
-    AppService,
     { provide: APP_FILTER, useClass: HttpGeneralExceptionFilter },
     { provide: APP_FILTER, useClass: HttpBusinessExceptionFilter },
     { provide: APP_FILTER, useClass: HttpRequestErrorExceptionFilter },
