@@ -10,6 +10,12 @@ import { HttpGeneralExceptionFilter } from './utils/exception/filter/http-genera
 import { HttpBusinessExceptionFilter } from './utils/exception/filter/http-business-exception.filter';
 import { HttpRequestErrorExceptionFilter } from './utils/exception/filter/request-error-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { Categoria } from './entities/categoria';
+import { Compra } from './entities/compra';
+import { DetalleCierre } from './entities/detalle-cierre';
+import { IntegranteListaCompra } from './entities/integrante-lista-compra';
+import { ListaCompra } from './entities/lista-compra';
+import { Usuario } from './entities/usuario';
 
 @Module({
   imports: [
@@ -30,7 +36,14 @@ import { APP_FILTER } from '@nestjs/core';
       username: configuration().database.username,
       password: configuration().database.password,
       database: configuration().database.dbname,
-      entities: [],
+      entities: [
+        Categoria,
+        Compra,
+        DetalleCierre,
+        IntegranteListaCompra,
+        ListaCompra,
+        Usuario,
+      ],
       synchronize: false,
     }),
     TypeOrmModule.forFeature([]),
