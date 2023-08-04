@@ -21,6 +21,11 @@ import { DetalleCierreRepository } from './repositories/detalle-cierre.repositor
 import { IntegranteListaCompraRepository } from './repositories/integrante-lista-compra.repository';
 import { ListaCompraRepository } from './repositories/lista-compra.repository';
 import { UsuarioRepository } from './repositories/usuario.repository';
+import { CompraService } from './services/compra.service';
+import { DetalleCierreService } from './services/detalle-cierre.service';
+import { IntegranteListaCompraService } from './services/integrante-lista-compra.service';
+import { ListaCompraService } from './services/lista-compra.service';
+import { UsuarioService } from './services/usuario.service';
 
 @Module({
   imports: [
@@ -68,6 +73,12 @@ import { UsuarioRepository } from './repositories/usuario.repository';
   ],
   controllers: [],
   providers: [
+    CategoriaService,
+    CompraService,
+    DetalleCierreService,
+    IntegranteListaCompraService,
+    ListaCompraService,
+    UsuarioService,
     { provide: APP_FILTER, useClass: HttpGeneralExceptionFilter },
     { provide: APP_FILTER, useClass: HttpBusinessExceptionFilter },
     { provide: APP_FILTER, useClass: HttpRequestErrorExceptionFilter },
