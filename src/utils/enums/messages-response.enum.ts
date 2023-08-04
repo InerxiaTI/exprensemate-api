@@ -1,0 +1,5 @@
+export enum MESSAGES_RESPONSE {
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+  DELETED = 'DELETED',
+}
