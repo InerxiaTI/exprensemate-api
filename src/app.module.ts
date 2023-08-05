@@ -14,13 +14,7 @@ import { DetalleCierre } from './entities/detalle-cierre';
 import { IntegranteListaCompra } from './entities/integrante-lista-compra';
 import { ListaCompra } from './entities/lista-compra';
 import { Usuario } from './entities/usuario';
-import { CategoriaRepository } from './repositories/categoria.repository';
 import { CategoriaService } from './services/categoria.service';
-import { CompraRepository } from './repositories/compra.repository';
-import { DetalleCierreRepository } from './repositories/detalle-cierre.repository';
-import { IntegranteListaCompraRepository } from './repositories/integrante-lista-compra.repository';
-import { ListaCompraRepository } from './repositories/lista-compra.repository';
-import { UsuarioRepository } from './repositories/usuario.repository';
 import { CompraService } from './services/compra.service';
 import { DetalleCierreService } from './services/detalle-cierre.service';
 import { IntegranteListaCompraService } from './services/integrante-lista-compra.service';
@@ -32,6 +26,7 @@ import { DetalleCierreController } from './controllers/detalle-cierre.controller
 import { IntegranteListaCompraController } from './controllers/integrante-lista-compra.controller';
 import { ListaCompraController } from './controllers/lista-compra.controller';
 import { UsuarioController } from './controllers/usuario.controller';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -64,17 +59,11 @@ import { UsuarioController } from './controllers/usuario.controller';
     }),
     TypeOrmModule.forFeature([
       Categoria,
-      CategoriaRepository,
       Compra,
-      CompraRepository,
       DetalleCierre,
-      DetalleCierreRepository,
       IntegranteListaCompra,
-      IntegranteListaCompraRepository,
       ListaCompra,
-      ListaCompraRepository,
       Usuario,
-      UsuarioRepository,
     ]),
   ],
   controllers: [
@@ -98,4 +87,6 @@ import { UsuarioController } from './controllers/usuario.controller';
     Logger,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private dataSource: DataSource) {}
+}
