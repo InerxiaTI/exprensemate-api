@@ -16,7 +16,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<any[]>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.listarComprasConFiltro(
+      body: await this.service.consultarListaComprasConFiltro(
         query['usuarioCreador'],
         query['estado'],
         query['nombre'],

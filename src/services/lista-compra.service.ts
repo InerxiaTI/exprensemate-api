@@ -22,7 +22,7 @@ export class ListaCompraService {
     private codigoAleatorioService: CodigoAleatorioService,
   ) {}
 
-  public async listarComprasConFiltro(
+  public async consultarListaComprasConFiltro(
     usuarioCreador: number,
     estado: string,
     nombre: string,
