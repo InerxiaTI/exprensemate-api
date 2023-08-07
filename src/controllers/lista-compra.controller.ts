@@ -24,7 +24,7 @@ export class ListaCompraController {
     };
   }
 
-  @Post('/guardar-lista-compra')
+  @Post('/crear-lista-compra')
   public async crearListaCompras(
     @Body() crearListaCompraRequest: CrearListaCompraRequest,
   ): Promise<StandardResponse<any>> {

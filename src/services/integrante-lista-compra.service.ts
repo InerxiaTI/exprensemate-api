@@ -51,17 +51,7 @@ export class IntegranteListaCompraService {
     ValidatorsService.validateRequired(integranteNew.usuarioFk);
     ValidatorsService.validateRequired(integranteNew.listaCompraFk);
 
-    const usuarioExist = await this.usuarioService.usuarioExists(
-      integranteNew.usuarioFk,
-    );
-    if (!usuarioExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
-    }
-
-    const usuario = await this.usuarioService.findById(integranteNew.usuarioFk);
-    if (!usuario.activo) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
-    }
+    await this.usuarioService.validateUser(integranteNew.usuarioFk);
 
     let isUsuarioCreador = false;
     if (listaCompra.usuarioCreadorFk === integranteNew.usuarioFk) {
@@ -74,7 +64,7 @@ export class IntegranteListaCompraService {
     //validar si es usuario creador, usuario creador ya esta
     if (isUsuarioCreador) {
       throw new BusinessException(
-        MESSAGES_EXCEPTION.DUPLICATE_USER_ON_SHOPPING_LIST,
+        MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
       );
     }
 
@@ -85,7 +75,7 @@ export class IntegranteListaCompraService {
     //validar que el usuario no se repita
     if (integranteFound && integranteFound.id) {
       throw new BusinessException(
-        MESSAGES_EXCEPTION.DUPLICATE_USER_ON_SHOPPING_LIST,
+        MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
       );
     }
     //validar que el porcentaje este entre 1 y 100

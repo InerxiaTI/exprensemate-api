@@ -1,6 +1,6 @@
 export class FiltroComprasRequest {
   descripcion: string;
   categoria: string;
-  idUsuarioCreador: number;
+  idUsuarioCompra: number;
   idListaCompras: number;
 }

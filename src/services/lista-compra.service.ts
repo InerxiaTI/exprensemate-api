@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ListaCompra } from '../entities/lista-compra';
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
 import { RequestErrorException } from '../utils/exception/request-error.exception';
@@ -11,6 +11,7 @@ import { CodigoAleatorioService } from '../utils/codigo-aleatorio.service';
 import { ValidatorsService } from '../utils/validators.service';
 import { IntegranteListaCompraService } from './integrante-lista-compra.service';
 import { IntegranteListaCompra } from '../entities/integrante-lista-compra';
+import { Compra } from '../entities/compra';
 
 @Injectable()
 export class ListaCompraService {
@@ -129,5 +130,20 @@ export class ListaCompraService {
         },
       );
     return listaCompraSaved;
+  }
+
+  /*Transactional*/
+  public async saveTotalCompras(
+    compras: Compra[],
+    idListaCompras: number,
+    entityManager: EntityManager,
+  ) {
+    const totalCompras = compras.reduce(
+      (suma, compra) => Number(suma) + Number(compra.valor),
+      0,
+    );
+    const listaCompras = await this.findById(idListaCompras);
+    listaCompras.totalCompras = totalCompras;
+    await entityManager.save(listaCompras);
   }
 }
