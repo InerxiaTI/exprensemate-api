@@ -12,7 +12,7 @@ export class Usuario {
   apellidos: string;
 
   @Column({ name: 'activo', type: 'boolean', nullable: false })
-  activo: string;
+  activo: boolean;
 
   @Column({ length: 50, name: 'correo', type: 'varchar', nullable: false })
   correo: string;

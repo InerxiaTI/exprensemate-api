@@ -57,7 +57,7 @@ export class ListaCompra {
     length: 50,
     name: 'codigo_generado',
     type: 'varchar',
-    nullable: false,
+    nullable: true,
   })
   codigoGenerado: string;
 }

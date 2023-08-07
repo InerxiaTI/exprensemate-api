@@ -54,4 +54,11 @@ export class IntegranteListaCompra {
     nullable: false,
   })
   habilitado: boolean;
+
+  @Column({
+    name: 'es_creador',
+    type: 'boolean',
+    nullable: false,
+  })
+  esCreador: boolean;
 }

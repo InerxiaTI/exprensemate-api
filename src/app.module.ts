@@ -27,6 +27,8 @@ import { IntegranteListaCompraController } from './controllers/integrante-lista-
 import { ListaCompraController } from './controllers/lista-compra.controller';
 import { UsuarioController } from './controllers/usuario.controller';
 import { DataSource } from 'typeorm';
+import { CodigoAleatorioService } from './utils/codigo-aleatorio.service';
+import { ValidatorsService } from './utils/validators.service';
 
 @Module({
   imports: [
@@ -85,6 +87,8 @@ import { DataSource } from 'typeorm';
     { provide: APP_FILTER, useClass: HttpBusinessExceptionFilter },
     { provide: APP_FILTER, useClass: HttpRequestErrorExceptionFilter },
     Logger,
+    CodigoAleatorioService,
+    ValidatorsService,
   ],
 })
 export class AppModule {
