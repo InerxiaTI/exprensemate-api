@@ -4,6 +4,7 @@ import { CompraService } from '../services/compra.service';
 import { StandardResponse } from '../utils/http-response/standard-response';
 import { FiltroComprasRequest } from '../dtos/filtro-compras.request.';
 import { CrearCompraRequest } from '../dtos/crear-compra.request.';
+import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
 
 @ApiTags('Compras')
 @Controller('api/compra')
@@ -26,6 +27,7 @@ export class CompraController {
   ): Promise<StandardResponse<any[]>> {
     return {
       status: HttpStatus.OK,
+      message: MESSAGES_RESPONSE.CREATED,
       body: await this.service.crearCompra(compraRequest),
     };
   }

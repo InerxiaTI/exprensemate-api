@@ -5,6 +5,7 @@ import { Usuario } from '../entities/usuario';
 import { ValidatorsService } from '../utils/validators.service';
 import { RequestErrorException } from '../utils/exception/request-error.exception';
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
+import { GetUsuarioRequest } from '../dtos/get-usuario.request.';
 
 @Injectable()
 export class UsuarioService {
@@ -37,5 +38,24 @@ export class UsuarioService {
     if (!usuario.activo) {
       throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
     }
+  }
+
+  public async getUsuario(getUsuarioRequest: GetUsuarioRequest) {
+    ValidatorsService.validateRequired(getUsuarioRequest.correo);
+    ValidatorsService.validateRequired(getUsuarioRequest.pass);
+
+    const usuario = await this.usuarioRepository.findOne({
+      where: {
+        correo: getUsuarioRequest.correo,
+      },
+    });
+
+    if (!usuario || usuario.contrasena !== getUsuarioRequest.pass) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_FOUND);
+    }
+    if (!usuario.activo) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
+    }
+    return usuario;
   }
 }
