@@ -12,6 +12,7 @@ import { ValidatorsService } from '../utils/validators.service';
 import { IntegranteListaCompraService } from './integrante-lista-compra.service';
 import { IntegranteListaCompra } from '../entities/integrante-lista-compra';
 import { Compra } from '../entities/compra';
+import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
 
 @Injectable()
 export class ListaCompraService {
@@ -30,10 +31,7 @@ export class ListaCompraService {
   ): Promise<any> {
     ValidatorsService.validateRequired(usuarioCreador);
 
-    const usuario = await this.usuarioService.usuarioExists(usuarioCreador);
-    if (!usuario) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
-    }
+    await this.usuarioService.validateUser(usuarioCreador);
 
     const sqlQuery = this.listaCompraRepository
       .createQueryBuilder('listaCompras')
@@ -66,7 +64,7 @@ export class ListaCompraService {
       .getRawMany();
   }
 
-  public async findById(idListaCompra: number) {
+  public async findById(idListaCompra: number): Promise<any> {
     return await this.listaCompraRepository.findOne({
       where: {
         id: idListaCompra,
@@ -74,30 +72,20 @@ export class ListaCompraService {
     });
   }
 
-  public async listaCompraExists(idListaCompra: number) {
+  public async listaCompraExists(idListaCompra: number): Promise<any> {
     ValidatorsService.validateRequired(idListaCompra);
     const listaCompra = await this.findById(idListaCompra);
     return !!listaCompra;
   }
 
   /*Transactional*/
-  public async crearListaCompras(listaCompra: CrearListaCompraRequest) {
+  public async crearListaCompras(
+    listaCompra: CrearListaCompraRequest,
+  ): Promise<any> {
     ValidatorsService.validateRequired(listaCompra.nombre);
     ValidatorsService.validateRequired(listaCompra.usuarioCreador);
 
-    const usuarioExist = await this.usuarioService.usuarioExists(
-      listaCompra.usuarioCreador,
-    );
-    if (!usuarioExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
-    }
-
-    const usuario = await this.usuarioService.findById(
-      listaCompra.usuarioCreador,
-    );
-    if (!usuario.activo) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
-    }
+    await this.usuarioService.validateUser(listaCompra.usuarioCreador);
 
     const listaCompraNew: ListaCompra = new ListaCompra();
     listaCompraNew.nombre = listaCompra.nombre;
@@ -145,5 +133,45 @@ export class ListaCompraService {
     const listaCompras = await this.findById(idListaCompras);
     listaCompras.totalCompras = totalCompras;
     await entityManager.save(listaCompras);
+  }
+
+  public async findByCodigoGenerado(codigoGenerado: string): Promise<any> {
+    return await this.listaCompraRepository.findOne({
+      where: {
+        codigoGenerado: codigoGenerado,
+      },
+    });
+  }
+
+  public async agregarIntegranteColaborador(
+    colaboradorRequest: AgregarColaboradorRequest,
+  ): Promise<any> {
+    ValidatorsService.validateRequired(colaboradorRequest);
+    ValidatorsService.validateRequired(colaboradorRequest.codigoGenerado);
+    ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
+
+    const listaCompra = await this.findByCodigoGenerado(
+      colaboradorRequest.codigoGenerado,
+    );
+    if (!listaCompra) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
+
+    if (listaCompra.estado !== ESTADOS_LISTA_COMPRAS.CONFIGURANDO) {
+      throw new RequestErrorException(
+        MESSAGES_EXCEPTION.ADD_COLLABORATOR_NOT_ALLOWED,
+      );
+    }
+
+    await this.usuarioService.validateUser(
+      colaboradorRequest.idUsuarioColaborador,
+    );
+
+    const integranteSaved =
+      await this.integranteListaCompraService.agregarIntegranteColaborador(
+        colaboradorRequest.idUsuarioColaborador,
+        listaCompra,
+      );
+    return integranteSaved;
   }
 }

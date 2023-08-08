@@ -4,6 +4,7 @@ import { ListaCompraService } from '../services/lista-compra.service';
 import { StandardResponse } from '../utils/http-response/standard-response';
 import { CrearListaCompraRequest } from '../dtos/crear-lista-compra.request.';
 import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
+import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -32,6 +33,17 @@ export class ListaCompraController {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.CREATED,
       body: await this.service.crearListaCompras(crearListaCompraRequest),
+    };
+  }
+
+  @Post('/agregar-colaborador')
+  public async agregarIntegranteColaborador(
+    @Body() colaboradorRequest: AgregarColaboradorRequest,
+  ): Promise<StandardResponse<any>> {
+    return {
+      status: HttpStatus.OK,
+      message: MESSAGES_RESPONSE.CREATED,
+      body: await this.service.agregarIntegranteColaborador(colaboradorRequest),
     };
   }
 }

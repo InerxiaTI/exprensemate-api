@@ -44,7 +44,7 @@ export class IntegranteListaCompra {
   @Column({
     name: 'porcentaje',
     type: 'numeric',
-    nullable: false,
+    nullable: true,
   })
   porcentaje: number;
 

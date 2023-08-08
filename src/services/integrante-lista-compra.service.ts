@@ -45,67 +45,67 @@ export class IntegranteListaCompraService {
   }
 
   public async agregarIntegranteColaborador(
-    integranteNew: IntegranteListaCompra,
+    idUsuarioColaborador: number,
     listaCompra: ListaCompra,
-  ) {
-    ValidatorsService.validateRequired(integranteNew.usuarioFk);
-    ValidatorsService.validateRequired(integranteNew.listaCompraFk);
+  ): Promise<any> {
+    ValidatorsService.validateRequired(idUsuarioColaborador);
 
-    await this.usuarioService.validateUser(integranteNew.usuarioFk);
-
-    let isUsuarioCreador = false;
-    if (listaCompra.usuarioCreadorFk === integranteNew.usuarioFk) {
-      isUsuarioCreador = true;
-    }
-
-    const integrantesLista: IntegranteListaCompra[] =
-      await this.consultarIntegrantesListaCompras(integranteNew.listaCompraFk);
-
-    //validar si es usuario creador, usuario creador ya esta
-    if (isUsuarioCreador) {
+    if (listaCompra.usuarioCreadorFk === idUsuarioColaborador) {
       throw new BusinessException(
         MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
       );
     }
 
-    const integranteFound = integrantesLista.find(
-      (integrante) => integrante.usuarioFk === integranteNew.usuarioFk,
+    const integrantesLista: any[] = await this.consultarIntegrantesListaCompras(
+      listaCompra.id,
     );
 
-    //validar que el usuario no se repita
+    const integranteFound = integrantesLista.find(
+      (integrante) => integrante.idUsuario === idUsuarioColaborador,
+    );
     if (integranteFound && integranteFound.id) {
       throw new BusinessException(
         MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
       );
     }
-    //validar que el porcentaje este entre 1 y 100
-    if (integranteNew.porcentaje < 1 || integranteNew.porcentaje >= 100) {
-      throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
-    }
 
-    //calcular porcentajes, restar al creador
-    const integranteCreadorCalculado = this.calcularPorcentajes(
-      integrantesLista,
-      integranteNew,
-    );
-
-    //validar que la suma de porcentajes no suba de 100
-    let sumaTotalPorcentajes =
-      this.getSumaPorcentajesColaboradores(integrantesLista);
-    sumaTotalPorcentajes += integranteCreadorCalculado.porcentaje;
-    sumaTotalPorcentajes += integranteNew.porcentaje;
-    if (sumaTotalPorcentajes > 100) {
-      throw new BusinessException(
-        MESSAGES_EXCEPTION.SUM_OF_PERCENTAGES_EXCEEDS_100_PERCENT,
-      );
-    }
-
-    //poner habilitado en false
+    const integranteNew: IntegranteListaCompra = new IntegranteListaCompra();
+    integranteNew.listaCompraFk = listaCompra.id;
+    integranteNew.usuarioFk = idUsuarioColaborador;
+    integranteNew.habilitado = false;
+    integranteNew.esCreador = false;
+    return await this.integranteListaCompraRepository.save(integranteNew);
   }
 
-  private sumarPorcentajesIntegrantes(integrantes: IntegranteListaCompra[]) {
+  habilitar() {
+    // //validar que el porcentaje este entre 1 y 100
+    // if (integranteNew.porcentaje < 1 || integranteNew.porcentaje >= 100) {
+    //   throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
+    // }
+    //
+    // //calcular porcentajes, restar al creador
+    // const integranteCreadorCalculado = this.calcularPorcentajes(
+    //   integrantesLista,
+    //   integranteNew,
+    // );
+    //
+    // //validar que la suma de porcentajes no suba de 100
+    // let sumaTotalPorcentajes =
+    //   this.getSumaPorcentajesColaboradores(integrantesLista);
+    // sumaTotalPorcentajes += integranteCreadorCalculado.porcentaje;
+    // sumaTotalPorcentajes += integranteNew.porcentaje;
+    // if (sumaTotalPorcentajes > 100) {
+    //   throw new BusinessException(
+    //     MESSAGES_EXCEPTION.SUM_OF_PERCENTAGES_EXCEEDS_100_PERCENT,
+    //   );
+    // }
+  }
+
+  private sumarPorcentajesIntegrantes(
+    integrantes: IntegranteListaCompra[],
+  ): number {
     return integrantes.reduce(
-      (suma, integrante) => suma + integrante.porcentaje,
+      (suma, integrante) => Number(suma) + Number(integrante.porcentaje),
       0,
     );
   }
@@ -113,7 +113,7 @@ export class IntegranteListaCompraService {
   private calcularPorcentajes(
     integrantesLista: IntegranteListaCompra[],
     integranteNew: IntegranteListaCompra,
-  ) {
+  ): IntegranteListaCompra {
     const integranteCreador = integrantesLista.find(
       (integrante) => integrante.esCreador,
     );
@@ -127,7 +127,7 @@ export class IntegranteListaCompraService {
 
   private getSumaPorcentajesColaboradores(
     integrantesLista: IntegranteListaCompra[],
-  ) {
+  ): number {
     const integrantesColaboradores = integrantesLista.filter(
       (integrante) => !integrante.esCreador,
     );

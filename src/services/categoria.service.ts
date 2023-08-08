@@ -16,7 +16,7 @@ export class CategoriaService {
     return categorias;
   }
 
-  public async findById(idCategoria: number) {
+  public async findById(idCategoria: number): Promise<any> {
     return await this.categoriaRepository.findOne({
       where: {
         id: idCategoria,
@@ -24,7 +24,7 @@ export class CategoriaService {
     });
   }
 
-  public async categoriaExists(idCategoria: number) {
+  public async categoriaExists(idCategoria: number): Promise<any> {
     ValidatorsService.validateRequired(idCategoria);
     const categoria = await this.findById(idCategoria);
     return !!categoria;

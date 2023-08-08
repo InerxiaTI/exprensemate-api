@@ -14,7 +14,7 @@ export class UsuarioService {
     private usuarioRepository: Repository<Usuario>,
   ) {}
 
-  public async findById(idUsuario: number) {
+  public async findById(idUsuario: number): Promise<any> {
     return await this.usuarioRepository.findOne({
       where: {
         id: idUsuario,
@@ -22,7 +22,7 @@ export class UsuarioService {
     });
   }
 
-  public async usuarioExists(idUsuario: number) {
+  public async usuarioExists(idUsuario: number): Promise<any> {
     ValidatorsService.validateRequired(idUsuario);
     const usuario = await this.findById(idUsuario);
     return !!usuario;
@@ -40,7 +40,7 @@ export class UsuarioService {
     }
   }
 
-  public async getUsuario(getUsuarioRequest: GetUsuarioRequest) {
+  public async getUsuario(getUsuarioRequest: GetUsuarioRequest): Promise<any> {
     ValidatorsService.validateRequired(getUsuarioRequest.correo);
     ValidatorsService.validateRequired(getUsuarioRequest.pass);
 
