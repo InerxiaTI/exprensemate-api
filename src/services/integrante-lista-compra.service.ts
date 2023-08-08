@@ -8,6 +8,7 @@ import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
 import { UsuarioService } from './usuario.service';
 import { ListaCompra } from '../entities/lista-compra';
 import { BusinessException } from '../utils/exception/business.exception';
+import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -38,7 +39,7 @@ export class IntegranteListaCompraService {
     }
 
     integranteNew.porcentaje = 100;
-    integranteNew.habilitado = true;
+    integranteNew.estado = ESTADOS_COLABORADORES.APROBADO;
     integranteNew.esCreador = true;
 
     await entityManager.save(integranteNew);
@@ -64,6 +65,11 @@ export class IntegranteListaCompraService {
       (integrante) => integrante.idUsuario === idUsuarioColaborador,
     );
     if (integranteFound && integranteFound.id) {
+      if (integranteFound.estado === ESTADOS_COLABORADORES.RECHAZADO) {
+        throw new BusinessException(
+          MESSAGES_EXCEPTION.PARTNER_REQUEST_REJECTED,
+        );
+      }
       throw new BusinessException(
         MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
       );
@@ -72,7 +78,7 @@ export class IntegranteListaCompraService {
     const integranteNew: IntegranteListaCompra = new IntegranteListaCompra();
     integranteNew.listaCompraFk = listaCompra.id;
     integranteNew.usuarioFk = idUsuarioColaborador;
-    integranteNew.habilitado = false;
+    integranteNew.estado = ESTADOS_COLABORADORES.PENDIENTE;
     integranteNew.esCreador = false;
     return await this.integranteListaCompraRepository.save(integranteNew);
   }
@@ -147,7 +153,7 @@ export class IntegranteListaCompraService {
       .addSelect('integrantesListaCompra.lista_compra_fk', 'idListaCompra')
       .addSelect('integrantesListaCompra.usuario_fk', 'idUsuario')
       .addSelect('integrantesListaCompra.porcentaje', 'porcentaje')
-      .addSelect('integrantesListaCompra.habilitado', 'habilitado')
+      .addSelect('integrantesListaCompra.estado', 'estado')
       .addSelect('integrantesListaCompra.es_creador', 'esCreador')
       .addSelect('usuario.nombres', 'nombresUsuario')
       .addSelect('usuario.apellidos', 'apellidosUsuario')

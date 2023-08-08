@@ -49,11 +49,11 @@ export class IntegranteListaCompra {
   porcentaje: number;
 
   @Column({
-    name: 'habilitado',
-    type: 'boolean',
+    name: 'estado',
+    type: 'varchar',
     nullable: false,
   })
-  habilitado: boolean;
+  estado: string;
 
   @Column({
     name: 'es_creador',

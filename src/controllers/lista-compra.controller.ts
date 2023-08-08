@@ -36,7 +36,7 @@ export class ListaCompraController {
     };
   }
 
-  @Post('/agregar-colaborador')
+  @Post('/solicitud-agregar-colaborador')
   public async agregarIntegranteColaborador(
     @Body() colaboradorRequest: AgregarColaboradorRequest,
   ): Promise<StandardResponse<any>> {
