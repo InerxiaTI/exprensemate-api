@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpStatus, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ListaCompraService } from '../services/lista-compra.service';
 import { StandardResponse } from '../utils/http-response/standard-response';
@@ -83,6 +91,16 @@ export class ListaCompraController {
     return {
       status: HttpStatus.OK,
       body: await this.service.consultarIntegrantesListaCompras(filtro),
+    };
+  }
+
+  @Put('/inicializar-lista-compras')
+  public async inicializarListaCompras(
+    @Query() query,
+  ): Promise<StandardResponse<any>> {
+    return {
+      status: HttpStatus.OK,
+      body: await this.service.inicializarListaCompras(query['idListaCompras']),
     };
   }
 }

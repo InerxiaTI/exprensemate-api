@@ -17,6 +17,7 @@ import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-cola
 import { BusinessException } from '../utils/exception/business.exception';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
+import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
 
 @Injectable()
 export class ListaCompraService {
@@ -274,6 +275,63 @@ export class ListaCompraService {
         filtro,
       );
     return integrantes;
+  }
+
+  public async inicializarListaCompras(idListaCompras: number): Promise<any> {
+    ValidatorsService.validateRequired(idListaCompras);
+    await this.validateListaCompras(idListaCompras);
+
+    const integrantesPendientes: any[] = await this.getIntegrantesPorEstado(
+      idListaCompras,
+      ESTADOS_COLABORADORES.PENDIENTE,
+    );
+    if (integrantesPendientes && integrantesPendientes.length > 0) {
+      throw new BusinessException(MESSAGES_EXCEPTION.HAS_PENDING_REQUESTS);
+    }
+
+    const integrantesAprobados = await this.getIntegrantesPorEstado(
+      idListaCompras,
+      ESTADOS_COLABORADORES.APROBADO,
+    );
+    const totalPorcentajes =
+      this.integranteListaCompraService.sumarPorcentajesIntegrantes(
+        integrantesAprobados,
+      );
+
+    if (totalPorcentajes !== Number(100)) {
+      throw new BusinessException(
+        MESSAGES_EXCEPTION.TOTAL_PERCENTAGES_MUST_BE_100_PERCENT,
+      );
+    }
+
+    const listaCompras = await this.cambiarEstadoListaCompras(
+      idListaCompras,
+      ESTADOS_LISTA_COMPRAS.PENDIENTE,
+    );
+    return listaCompras;
+  }
+
+  private async getIntegrantesPorEstado(
+    idListaCompras: number,
+    estado: ESTADOS_COLABORADORES,
+  ) {
+    const filtro: ConsultaIntegrantesFilter = new ConsultaIntegrantesFilter();
+    const estados = [estado];
+    filtro.idListaCompras = idListaCompras;
+    filtro.estados = estados;
+
+    return await this.integranteListaCompraService.consultarIntegrantesListaCompras(
+      filtro,
+    );
+  }
+
+  public async cambiarEstadoListaCompras(
+    idListaCompras: number,
+    estado: ESTADOS_LISTA_COMPRAS,
+  ): Promise<any> {
+    const listaCompras = await this.findById(idListaCompras);
+    listaCompras.estado = estado;
+    return await this.listaCompraRepository.save(listaCompras);
   }
 
   public async validateListaCompras(idListaCompras: number) {

@@ -173,7 +173,7 @@ export class IntegranteListaCompraService {
     return this.sumarPorcentajesIntegrantes(integrantesColaboradores);
   }
 
-  private sumarPorcentajesIntegrantes(
+  public sumarPorcentajesIntegrantes(
     integrantes: IntegranteListaCompra[],
   ): number {
     return integrantes.reduce(
