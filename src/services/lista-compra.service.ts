@@ -13,6 +13,8 @@ import { IntegranteListaCompraService } from './integrante-lista-compra.service'
 import { IntegranteListaCompra } from '../entities/integrante-lista-compra';
 import { Compra } from '../entities/compra';
 import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
+import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
+import { BusinessException } from '../utils/exception/business.exception';
 
 @Injectable()
 export class ListaCompraService {
@@ -173,5 +175,65 @@ export class ListaCompraService {
         listaCompra,
       );
     return integranteSaved;
+  }
+
+  public async aprobarRechazarColaborador(
+    colaboradorRequest: AprobarRechazarColaboradorRequest,
+  ): Promise<any> {
+    ValidatorsService.validateRequired(colaboradorRequest);
+    ValidatorsService.validateRequired(colaboradorRequest.idUsuarioCreador);
+    ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
+    ValidatorsService.validateRequired(colaboradorRequest.idListaCompras);
+
+    await this.usuarioService.validateUser(colaboradorRequest.idUsuarioCreador);
+    await this.usuarioService.validateUser(
+      colaboradorRequest.idUsuarioColaborador,
+    );
+
+    await this.validateListaCompras(colaboradorRequest.idListaCompras);
+
+    const listaCompras = await this.findById(colaboradorRequest.idListaCompras);
+    if (listaCompras.usuarioCreadorFk !== colaboradorRequest.idUsuarioCreador) {
+      throw new BusinessException(MESSAGES_EXCEPTION.NOT_ALLOWED_ENABLE);
+    }
+
+    if (listaCompras.estado !== ESTADOS_LISTA_COMPRAS.CONFIGURANDO) {
+      throw new RequestErrorException(
+        MESSAGES_EXCEPTION.ENABLE_COLLABORATOR_NOT_ALLOWED,
+      );
+    }
+
+    if (
+      listaCompras.usuarioCreadorFk === colaboradorRequest.idUsuarioColaborador
+    ) {
+      throw new BusinessException(
+        MESSAGES_EXCEPTION.CHANGE_REQUEST_STATUS_TO_CREATOR_NOT_ALLOWED,
+      );
+    }
+
+    const integranteSaved =
+      await this.integranteListaCompraService.aprobarRechazarColaborador(
+        colaboradorRequest,
+      );
+    return integranteSaved;
+  }
+
+  //habilitar
+
+  //calcular porcentaje
+
+  //validar el porcentaje
+  // if (
+  //   colaboradorRequest.porcentaje < 1 ||
+  //   colaboradorRequest.porcentaje >= 100
+  // ) {
+  //   throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
+  // }
+
+  public async validateListaCompras(idListaCompras: number) {
+    const listaCompraExist = await this.listaCompraExists(idListaCompras);
+    if (!listaCompraExist) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
   }
 }

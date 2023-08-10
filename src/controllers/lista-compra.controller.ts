@@ -5,6 +5,7 @@ import { StandardResponse } from '../utils/http-response/standard-response';
 import { CrearListaCompraRequest } from '../dtos/crear-lista-compra.request.';
 import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
 import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
+import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -44,6 +45,19 @@ export class ListaCompraController {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.CREATED,
       body: await this.service.agregarIntegranteColaborador(colaboradorRequest),
+    };
+  }
+
+  @Post('/aprobar-rechazar-colaborador')
+  public async aprobarRechazarColaborador(
+    @Body() habilitarColaboradorRequest: AprobarRechazarColaboradorRequest,
+  ): Promise<StandardResponse<any>> {
+    return {
+      status: HttpStatus.OK,
+      message: MESSAGES_RESPONSE.CREATED,
+      body: await this.service.aprobarRechazarColaborador(
+        habilitarColaboradorRequest,
+      ),
     };
   }
 }

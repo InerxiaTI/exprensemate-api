@@ -29,7 +29,9 @@ export class CompraService {
     ValidatorsService.validateRequired(filtroComprasRequest.idListaCompras);
     ValidatorsService.validateRequired(filtroComprasRequest.idUsuarioCompra);
 
-    await this.validateListaCompras(filtroComprasRequest.idListaCompras);
+    await this.listaCompraService.validateListaCompras(
+      filtroComprasRequest.idListaCompras,
+    );
 
     await this.usuarioService.validateUser(
       filtroComprasRequest.idUsuarioCompra,
@@ -86,7 +88,7 @@ export class CompraService {
     idListaCompras: number,
   ): Promise<any> {
     ValidatorsService.validateRequired(idListaCompras);
-    await this.validateListaCompras(idListaCompras);
+    await this.listaCompraService.validateListaCompras(idListaCompras);
 
     const sqlQuery = this.compraRepository
       .createQueryBuilder('compras')
@@ -106,15 +108,6 @@ export class CompraService {
     return await sqlQuery.orderBy('compras.fecha_compra', 'DESC').getRawMany();
   }
 
-  private async validateListaCompras(idListaCompras: number) {
-    const listaCompraExist = await this.listaCompraService.listaCompraExists(
-      idListaCompras,
-    );
-    if (!listaCompraExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
-    }
-  }
-
   private async validateCategoria(idCategoria: number) {
     const categoria = await this.categoriaService.categoriaExists(idCategoria);
     if (!categoria) {
@@ -132,7 +125,9 @@ export class CompraService {
     ValidatorsService.validateRequired(compraRequest.fechaCompra);
     ValidatorsService.validateRequired(compraRequest.valor);
 
-    await this.validateListaCompras(compraRequest.idListaCompras);
+    await this.listaCompraService.validateListaCompras(
+      compraRequest.idListaCompras,
+    );
     await this.usuarioService.validateUser(compraRequest.idUsuarioCompra);
     await this.usuarioService.validateUser(compraRequest.idUsuarioRegistro);
     await this.validateCategoria(compraRequest.idCategoria);

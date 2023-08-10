@@ -9,6 +9,7 @@ import { UsuarioService } from './usuario.service';
 import { ListaCompra } from '../entities/lista-compra';
 import { BusinessException } from '../utils/exception/business.exception';
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
+import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -57,8 +58,14 @@ export class IntegranteListaCompraService {
       );
     }
 
+    const estados = [
+      ESTADOS_COLABORADORES.APROBADO,
+      ESTADOS_COLABORADORES.PENDIENTE,
+      ESTADOS_COLABORADORES.RECHAZADO,
+    ];
     const integrantesLista: any[] = await this.consultarIntegrantesListaCompras(
       listaCompra.id,
+      estados,
     );
 
     const integranteFound = integrantesLista.find(
@@ -83,38 +90,62 @@ export class IntegranteListaCompraService {
     return await this.integranteListaCompraRepository.save(integranteNew);
   }
 
-  habilitar() {
-    // //validar que el porcentaje este entre 1 y 100
-    // if (integranteNew.porcentaje < 1 || integranteNew.porcentaje >= 100) {
-    //   throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
-    // }
-    //
-    // //calcular porcentajes, restar al creador
-    // const integranteCreadorCalculado = this.calcularPorcentajes(
-    //   integrantesLista,
-    //   integranteNew,
-    // );
-    //
-    // //validar que la suma de porcentajes no suba de 100
-    // let sumaTotalPorcentajes =
-    //   this.getSumaPorcentajesColaboradores(integrantesLista);
-    // sumaTotalPorcentajes += integranteCreadorCalculado.porcentaje;
-    // sumaTotalPorcentajes += integranteNew.porcentaje;
-    // if (sumaTotalPorcentajes > 100) {
-    //   throw new BusinessException(
-    //     MESSAGES_EXCEPTION.SUM_OF_PERCENTAGES_EXCEEDS_100_PERCENT,
-    //   );
-    // }
-  }
-
-  private sumarPorcentajesIntegrantes(
-    integrantes: IntegranteListaCompra[],
-  ): number {
-    return integrantes.reduce(
-      (suma, integrante) => Number(suma) + Number(integrante.porcentaje),
-      0,
+  public async aprobarRechazarColaborador(
+    colaboradorRequest: AprobarRechazarColaboradorRequest,
+  ): Promise<any> {
+    const integrante = await this.findByListaCompraAndUsuario(
+      colaboradorRequest.idListaCompras,
+      colaboradorRequest.idUsuarioColaborador,
     );
+
+    if (!integrante) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
+
+    if (colaboradorRequest.aprobar) {
+      integrante.estado = ESTADOS_COLABORADORES.APROBADO;
+    } else {
+      integrante.estado = ESTADOS_COLABORADORES.RECHAZADO;
+    }
+
+    const integranteSaved = await this.integranteListaCompraRepository.save(
+      integrante,
+    );
+    return integranteSaved;
   }
+  
+//   if (integrante.estado === ESTADOS_COLABORADORES.RECHAZADO) {
+//   throw new BusinessException(MESSAGES_EXCEPTION.PARTNER_REQUEST_REJECTED);
+// }
+
+  // const estados = [
+  //   ESTADOS_COLABORADORES.APROBADO,
+  //   ESTADOS_COLABORADORES.PENDIENTE,
+  // ];
+  // const integrantesLista: any[] = await this.consultarIntegrantesListaCompras(
+  //   colaboradorRequest.idListaCompras,
+  //   estados,
+  // );
+  //
+  // //calcular porcentajes
+  // const integranteCreadorCalculado = this.calcularPorcentajes(
+  //   integrantesLista,
+  //   integrante,
+  // );
+  //
+  // //validar que la suma de porcentajes
+  // let sumaTotalPorcentajes =
+  //   this.getSumaPorcentajesColaboradores(integrantesLista);
+  // sumaTotalPorcentajes += integranteCreadorCalculado.porcentaje;
+  // sumaTotalPorcentajes += integrante.porcentaje;
+  //
+  // if (sumaTotalPorcentajes > 100) {
+  //   throw new BusinessException(
+  //     MESSAGES_EXCEPTION.SUM_OF_PERCENTAGES_EXCEEDS_100_PERCENT,
+  //   );
+  // }
+
+  // await this.integranteListaCompraRepository.save(integranteCreadorCalculado);
 
   private calcularPorcentajes(
     integrantesLista: IntegranteListaCompra[],
@@ -123,11 +154,13 @@ export class IntegranteListaCompraService {
     const integranteCreador = integrantesLista.find(
       (integrante) => integrante.esCreador,
     );
+
     let sumaPorcentajesColaboradores =
       this.getSumaPorcentajesColaboradores(integrantesLista);
-
     sumaPorcentajesColaboradores += integranteNew.porcentaje;
-    integranteCreador.porcentaje = Number(100) - sumaPorcentajesColaboradores;
+
+    integranteCreador.porcentaje =
+      Number(100) - Number(sumaPorcentajesColaboradores);
     return integranteCreador;
   }
 
@@ -140,10 +173,18 @@ export class IntegranteListaCompraService {
     return this.sumarPorcentajesIntegrantes(integrantesColaboradores);
   }
 
-  //servicio para habilitar integrante
+  private sumarPorcentajesIntegrantes(
+    integrantes: IntegranteListaCompra[],
+  ): number {
+    return integrantes.reduce(
+      (suma, integrante) => Number(suma) + Number(integrante.porcentaje),
+      0,
+    );
+  }
 
   public async consultarIntegrantesListaCompras(
     idListaCompras: number,
+    estados: string[],
   ): Promise<any> {
     ValidatorsService.validateRequired(idListaCompras);
 
@@ -160,10 +201,25 @@ export class IntegranteListaCompraService {
       .leftJoin('integrantesListaCompra.usuario', 'usuario')
       .where('integrantesListaCompra.lista_compra_fk = :idListaCompras', {
         idListaCompras: idListaCompras,
+      })
+      .andWhere('integrantesListaCompra.estado IN (:...estados)', {
+        estados: estados,
       });
 
     return await sqlQuery
       .orderBy('integrantesListaCompra.porcentaje', 'DESC')
       .getRawMany();
+  }
+
+  public async findByListaCompraAndUsuario(
+    idListaCompra: number,
+    idUsuario,
+  ): Promise<any> {
+    return await this.integranteListaCompraRepository.findOne({
+      where: {
+        listaCompraFk: idListaCompra,
+        usuarioFk: idUsuario,
+      },
+    });
   }
 }
