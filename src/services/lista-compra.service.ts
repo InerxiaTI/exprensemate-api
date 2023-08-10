@@ -30,6 +30,30 @@ export class ListaCompraService {
   ) {}
 
   public async consultarListaComprasConFiltro(
+    usuario: number,
+    estado: string,
+    nombre: string,
+  ): Promise<any> {
+    ValidatorsService.validateRequired(usuario);
+
+    const usuarioExist = await this.usuarioService.usuarioExists(usuario);
+    if (!usuarioExist) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
+
+    const usuarioActivo = await this.usuarioService.findById(usuario);
+    if (!usuarioActivo.activo) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
+    }
+
+    return await this.integranteListaCompraService.consultarListaComprasConFiltro(
+      usuario,
+      estado,
+      nombre,
+    );
+  }
+
+  public async consultarMisListaComprasConFiltro(
     usuarioCreador: number,
     estado: string,
     nombre: string,

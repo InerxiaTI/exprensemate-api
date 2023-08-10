@@ -21,6 +21,43 @@ export class IntegranteListaCompraService {
     private usuarioService: UsuarioService,
   ) {}
 
+  public async consultarListaComprasConFiltro(
+    usuario: number,
+    estado: string,
+    nombre: string,
+  ): Promise<any> {
+    const sqlQuery = this.integranteListaCompraRepository
+      .createQueryBuilder('integrantes')
+      .select('listaCompras.id', 'id')
+      .addSelect('listaCompras.nombre', 'nombre')
+      .addSelect('listaCompras.fecha_creacion', 'fechaCreacion')
+      .addSelect('listaCompras.estado', 'estado')
+      .addSelect('listaCompras.fecha_finalizado', 'fechaFinalizado')
+      .addSelect('listaCompras.total_compras', 'totalCompras')
+      .addSelect('listaCompras.usuario_creador_fk', 'usuarioCreador')
+      .addSelect('listaCompras.codigo_generado', 'codigoGenerado')
+      .innerJoin('integrantes.listaCompra', 'listaCompras')
+      .where('integrantes.usuario_fk = :usuario', {
+        usuario: usuario,
+      });
+
+    if (estado || estado === '') {
+      sqlQuery.andWhere('listaCompras.estado = :estado', {
+        estado: estado,
+      });
+    }
+
+    if (nombre || nombre === '') {
+      sqlQuery.andWhere('listaCompras.nombre like :nombre', {
+        nombre: `%${nombre}%`,
+      });
+    }
+
+    return await sqlQuery
+      .orderBy('listaCompras.fecha_creacion', 'DESC')
+      .getRawMany();
+  }
+
   /*Transactional*/
   public async agregarIntegranteCreador(
     integranteNew: IntegranteListaCompra,

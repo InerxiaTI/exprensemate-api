@@ -29,6 +29,20 @@ export class ListaCompraController {
     return {
       status: HttpStatus.OK,
       body: await this.service.consultarListaComprasConFiltro(
+        query['usuario'],
+        query['estado'],
+        query['nombre'],
+      ),
+    };
+  }
+  
+  @Get('/filter-mis-listas')
+  public async consultarMisListaComprasConFiltro(
+    @Query() query,
+  ): Promise<StandardResponse<any[]>> {
+    return {
+      status: HttpStatus.OK,
+      body: await this.service.consultarMisListaComprasConFiltro(
         query['usuarioCreador'],
         query['estado'],
         query['nombre'],
