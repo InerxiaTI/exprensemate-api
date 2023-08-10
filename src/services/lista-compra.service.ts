@@ -16,6 +16,7 @@ import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.'
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { BusinessException } from '../utils/exception/business.exception';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
+import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 
 @Injectable()
 export class ListaCompraService {
@@ -258,6 +259,21 @@ export class ListaCompraService {
         colaboradorRequest,
       );
     return integranteSaved;
+  }
+
+  public async consultarIntegrantesListaCompras(
+    filtro: ConsultaIntegrantesFilter,
+  ): Promise<any> {
+    ValidatorsService.validateRequired(filtro);
+    ValidatorsService.validateRequired(filtro.idListaCompras);
+
+    await this.validateListaCompras(filtro.idListaCompras);
+
+    const integrantes =
+      await this.integranteListaCompraService.consultarIntegrantesListaCompras(
+        filtro,
+      );
+    return integrantes;
   }
 
   public async validateListaCompras(idListaCompras: number) {

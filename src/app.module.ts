@@ -23,7 +23,6 @@ import { UsuarioService } from './services/usuario.service';
 import { CategoriaController } from './controllers/categoria.controller';
 import { CompraController } from './controllers/compra.controller';
 import { DetalleCierreController } from './controllers/detalle-cierre.controller';
-import { IntegranteListaCompraController } from './controllers/integrante-lista-compra.controller';
 import { ListaCompraController } from './controllers/lista-compra.controller';
 import { UsuarioController } from './controllers/usuario.controller';
 import { DataSource } from 'typeorm';
@@ -72,7 +71,6 @@ import { ValidatorsService } from './utils/validators.service';
     CategoriaController,
     CompraController,
     DetalleCierreController,
-    IntegranteListaCompraController,
     ListaCompraController,
     UsuarioController,
   ],

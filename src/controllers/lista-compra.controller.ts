@@ -7,6 +7,7 @@ import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
 import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
+import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -71,6 +72,17 @@ export class ListaCompraController {
       body: await this.service.asignarPorcentajeColaborador(
         asignarPorcentajeColaboradorRequest,
       ),
+    };
+  }
+
+  @Post('/filter-integrantes')
+  public async consultarIntegrantesListaCompras(
+    @Body()
+    filtro: ConsultaIntegrantesFilter,
+  ): Promise<StandardResponse<any>> {
+    return {
+      status: HttpStatus.OK,
+      body: await this.service.consultarIntegrantesListaCompras(filtro),
     };
   }
 }

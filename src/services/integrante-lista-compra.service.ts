@@ -11,6 +11,7 @@ import { BusinessException } from '../utils/exception/business.exception';
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
+import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -64,9 +65,11 @@ export class IntegranteListaCompraService {
       ESTADOS_COLABORADORES.PENDIENTE,
       ESTADOS_COLABORADORES.RECHAZADO,
     ];
+    const filtro: ConsultaIntegrantesFilter = new ConsultaIntegrantesFilter();
+    filtro.idListaCompras = listaCompra.id;
+    filtro.estados = estados;
     const integrantesLista: any[] = await this.consultarIntegrantesListaCompras(
-      listaCompra.id,
-      estados,
+      filtro,
     );
 
     const integranteFound = integrantesLista.find(
@@ -180,10 +183,9 @@ export class IntegranteListaCompraService {
   }
 
   public async consultarIntegrantesListaCompras(
-    idListaCompras: number,
-    estados: string[],
+    filtro: ConsultaIntegrantesFilter,
   ): Promise<any> {
-    ValidatorsService.validateRequired(idListaCompras);
+    ValidatorsService.validateRequired(filtro.idListaCompras);
 
     const sqlQuery = this.integranteListaCompraRepository
       .createQueryBuilder('integrantesListaCompra')
@@ -195,13 +197,25 @@ export class IntegranteListaCompraService {
       .addSelect('integrantesListaCompra.es_creador', 'esCreador')
       .addSelect('usuario.nombres', 'nombresUsuario')
       .addSelect('usuario.apellidos', 'apellidosUsuario')
-      .leftJoin('integrantesListaCompra.usuario', 'usuario')
+      .innerJoin('integrantesListaCompra.usuario', 'usuario')
       .where('integrantesListaCompra.lista_compra_fk = :idListaCompras', {
-        idListaCompras: idListaCompras,
-      })
-      .andWhere('integrantesListaCompra.estado IN (:...estados)', {
-        estados: estados,
+        idListaCompras: filtro.idListaCompras,
       });
+
+    if (filtro.estados && filtro.estados.length > 0) {
+      sqlQuery.andWhere('integrantesListaCompra.estado IN (:...estados)', {
+        estados: filtro.estados,
+      });
+    }
+
+    if (filtro.nombres) {
+      sqlQuery.andWhere(
+        '(usuario.nombres like :nombres OR usuario.apellidos like :nombres)',
+        {
+          nombres: `%${filtro.nombres}%`,
+        },
+      );
+    }
 
     return await sqlQuery
       .orderBy('integrantesListaCompra.porcentaje', 'DESC')
