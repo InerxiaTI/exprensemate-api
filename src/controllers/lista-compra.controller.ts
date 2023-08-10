@@ -6,6 +6,7 @@ import { CrearListaCompraRequest } from '../dtos/crear-lista-compra.request.';
 import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
 import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
+import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -43,20 +44,32 @@ export class ListaCompraController {
   ): Promise<StandardResponse<any>> {
     return {
       status: HttpStatus.OK,
-      message: MESSAGES_RESPONSE.CREATED,
       body: await this.service.agregarIntegranteColaborador(colaboradorRequest),
     };
   }
 
   @Post('/aprobar-rechazar-colaborador')
   public async aprobarRechazarColaborador(
-    @Body() habilitarColaboradorRequest: AprobarRechazarColaboradorRequest,
+    @Body()
+    aprobarRechazarColaboradorRequest: AprobarRechazarColaboradorRequest,
   ): Promise<StandardResponse<any>> {
     return {
       status: HttpStatus.OK,
-      message: MESSAGES_RESPONSE.CREATED,
       body: await this.service.aprobarRechazarColaborador(
-        habilitarColaboradorRequest,
+        aprobarRechazarColaboradorRequest,
+      ),
+    };
+  }
+
+  @Post('/asignar-porcentaje-colaborador')
+  public async asignarPorcentajeColaborador(
+    @Body()
+    asignarPorcentajeColaboradorRequest: AsignarPorcentajeColaboradorRequest,
+  ): Promise<StandardResponse<any>> {
+    return {
+      status: HttpStatus.OK,
+      body: await this.service.asignarPorcentajeColaborador(
+        asignarPorcentajeColaboradorRequest,
       ),
     };
   }

@@ -10,6 +10,7 @@ import { ListaCompra } from '../entities/lista-compra';
 import { BusinessException } from '../utils/exception/business.exception';
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
+import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -113,39 +114,35 @@ export class IntegranteListaCompraService {
     );
     return integranteSaved;
   }
-  
-//   if (integrante.estado === ESTADOS_COLABORADORES.RECHAZADO) {
-//   throw new BusinessException(MESSAGES_EXCEPTION.PARTNER_REQUEST_REJECTED);
-// }
 
-  // const estados = [
-  //   ESTADOS_COLABORADORES.APROBADO,
-  //   ESTADOS_COLABORADORES.PENDIENTE,
-  // ];
-  // const integrantesLista: any[] = await this.consultarIntegrantesListaCompras(
-  //   colaboradorRequest.idListaCompras,
-  //   estados,
-  // );
-  //
-  // //calcular porcentajes
-  // const integranteCreadorCalculado = this.calcularPorcentajes(
-  //   integrantesLista,
-  //   integrante,
-  // );
-  //
-  // //validar que la suma de porcentajes
-  // let sumaTotalPorcentajes =
-  //   this.getSumaPorcentajesColaboradores(integrantesLista);
-  // sumaTotalPorcentajes += integranteCreadorCalculado.porcentaje;
-  // sumaTotalPorcentajes += integrante.porcentaje;
-  //
-  // if (sumaTotalPorcentajes > 100) {
-  //   throw new BusinessException(
-  //     MESSAGES_EXCEPTION.SUM_OF_PERCENTAGES_EXCEEDS_100_PERCENT,
-  //   );
-  // }
+  public async asignarPorcentajeColaborador(
+    colaboradorRequest: AsignarPorcentajeColaboradorRequest,
+  ): Promise<any> {
+    const integrante = await this.findByListaCompraAndUsuario(
+      colaboradorRequest.idListaCompras,
+      colaboradorRequest.idUsuarioColaborador,
+    );
 
-  // await this.integranteListaCompraRepository.save(integranteCreadorCalculado);
+    if (!integrante) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
+
+    if (integrante.estado === ESTADOS_COLABORADORES.RECHAZADO) {
+      throw new BusinessException(MESSAGES_EXCEPTION.PARTNER_REQUEST_REJECTED);
+    }
+
+    if (integrante.estado === ESTADOS_COLABORADORES.PENDIENTE) {
+      throw new BusinessException(
+        MESSAGES_EXCEPTION.REQUEST_HAS_NOT_BEEN_APPROVED,
+      );
+    }
+
+    integrante.porcentaje = colaboradorRequest.porcentaje;
+    const integranteSaved = await this.integranteListaCompraRepository.save(
+      integrante,
+    );
+    return integranteSaved;
+  }
 
   private calcularPorcentajes(
     integrantesLista: IntegranteListaCompra[],

@@ -15,6 +15,7 @@ import { Compra } from '../entities/compra';
 import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.';
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { BusinessException } from '../utils/exception/business.exception';
+import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 
 @Injectable()
 export class ListaCompraService {
@@ -218,17 +219,46 @@ export class ListaCompraService {
     return integranteSaved;
   }
 
-  //habilitar
+  public async asignarPorcentajeColaborador(
+    colaboradorRequest: AsignarPorcentajeColaboradorRequest,
+  ): Promise<any> {
+    ValidatorsService.validateRequired(colaboradorRequest);
+    ValidatorsService.validateRequired(colaboradorRequest.idUsuarioCreador);
+    ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
+    ValidatorsService.validateRequired(colaboradorRequest.idListaCompras);
+    ValidatorsService.validateRequired(colaboradorRequest.porcentaje);
 
-  //calcular porcentaje
+    await this.usuarioService.validateUser(colaboradorRequest.idUsuarioCreador);
+    await this.usuarioService.validateUser(
+      colaboradorRequest.idUsuarioColaborador,
+    );
 
-  //validar el porcentaje
-  // if (
-  //   colaboradorRequest.porcentaje < 1 ||
-  //   colaboradorRequest.porcentaje >= 100
-  // ) {
-  //   throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
-  // }
+    await this.validateListaCompras(colaboradorRequest.idListaCompras);
+
+    const listaCompras = await this.findById(colaboradorRequest.idListaCompras);
+    if (listaCompras.usuarioCreadorFk !== colaboradorRequest.idUsuarioCreador) {
+      throw new BusinessException(MESSAGES_EXCEPTION.NOT_ALLOWED_ENABLE);
+    }
+
+    if (listaCompras.estado !== ESTADOS_LISTA_COMPRAS.CONFIGURANDO) {
+      throw new RequestErrorException(
+        MESSAGES_EXCEPTION.ENABLE_COLLABORATOR_NOT_ALLOWED,
+      );
+    }
+
+    if (
+      colaboradorRequest.porcentaje < 1 ||
+      colaboradorRequest.porcentaje > 100
+    ) {
+      throw new BusinessException(MESSAGES_EXCEPTION.PERCENT_NOT_ALLOWED);
+    }
+
+    const integranteSaved =
+      await this.integranteListaCompraService.asignarPorcentajeColaborador(
+        colaboradorRequest,
+      );
+    return integranteSaved;
+  }
 
   public async validateListaCompras(idListaCompras: number) {
     const listaCompraExist = await this.listaCompraExists(idListaCompras);
