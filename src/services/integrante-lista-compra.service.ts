@@ -25,6 +25,7 @@ export class IntegranteListaCompraService {
     usuario: number,
     estado: string,
     nombre: string,
+    estadoIntegrante: string,
   ): Promise<any> {
     const sqlQuery = this.integranteListaCompraRepository
       .createQueryBuilder('integrantes')
@@ -39,6 +40,9 @@ export class IntegranteListaCompraService {
       .innerJoin('integrantes.listaCompra', 'listaCompras')
       .where('integrantes.usuario_fk = :usuario', {
         usuario: usuario,
+      })
+      .andWhere('integrantes.estado = :estado', {
+        estado: estadoIntegrante,
       });
 
     if (estado || estado === '') {

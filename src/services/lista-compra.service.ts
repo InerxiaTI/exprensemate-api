@@ -50,6 +50,7 @@ export class ListaCompraService {
       usuario,
       estado,
       nombre,
+      ESTADOS_COLABORADORES.APROBADO,
     );
   }
 
