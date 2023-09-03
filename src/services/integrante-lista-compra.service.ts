@@ -12,6 +12,8 @@ import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
+import { ResultPage } from '../utils/result-page';
+import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -57,9 +59,67 @@ export class IntegranteListaCompraService {
       });
     }
 
-    return await sqlQuery
-      .orderBy('listaCompras.fecha_creacion', 'DESC')
+    return await sqlQuery.orderBy('listaCompras.id', 'ASC').getRawMany();
+  }
+
+  async consultarListaComprasConFiltroConPaginacion(
+    filter: FilterListasComprasRequest,
+    estadoIntegrante: string,
+    page = 1,
+    size = 10,
+    sort = 'id,ASC',
+  ): Promise<ResultPage<any>> {
+    const sqlQuery = this.integranteListaCompraRepository
+      .createQueryBuilder('integrantes')
+      .select('listaCompras.id', 'id')
+      .addSelect('listaCompras.nombre', 'nombre')
+      .addSelect('listaCompras.fecha_creacion', 'fechaCreacion')
+      .addSelect('listaCompras.estado', 'estado')
+      .addSelect('listaCompras.fecha_finalizado', 'fechaFinalizado')
+      .addSelect('listaCompras.total_compras', 'totalCompras')
+      .addSelect('listaCompras.usuario_creador_fk', 'usuarioCreador')
+      .addSelect('listaCompras.codigo_generado', 'codigoGenerado')
+      .innerJoin('integrantes.listaCompra', 'listaCompras')
+      .where('integrantes.usuario_fk = :usuario', {
+        usuario: filter.usuario,
+      })
+      .andWhere('integrantes.estado = :estado', {
+        estado: estadoIntegrante,
+      });
+
+    if (filter.estado || filter.estado === '') {
+      sqlQuery.andWhere('listaCompras.estado = :estado', {
+        estado: filter.estado,
+      });
+    }
+
+    if (filter.nombre || filter.nombre === '') {
+      sqlQuery.andWhere('listaCompras.nombre like :nombre', {
+        nombre: `%${filter.nombre}%`,
+      });
+    }
+
+    const count = await sqlQuery.getCount();
+    const totalPages = Math.ceil(count / size);
+
+    sqlQuery.limit(size).offset((page - 1) * size);
+
+    const sortParts = sort.split(',');
+    const sortField = sortParts[0];
+    const sortOrder = sortParts[1] === 'DESC' ? 'DESC' : 'ASC';
+
+    const result = await sqlQuery
+      .orderBy(`listaCompras.${sortField}`, sortOrder)
       .getRawMany();
+
+    return {
+      page: page,
+      size: size,
+      content: result,
+      totalElements: count,
+      totalPages: totalPages,
+      totalContent: result.length,
+    };
   }
 
   /*Transactional*/

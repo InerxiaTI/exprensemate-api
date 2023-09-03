@@ -18,6 +18,8 @@ import { BusinessException } from '../utils/exception/business.exception';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
+import { ResultPage } from '../utils/result-page';
+import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
 
 @Injectable()
 export class ListaCompraService {
@@ -29,28 +31,32 @@ export class ListaCompraService {
     private codigoAleatorioService: CodigoAleatorioService,
   ) {}
 
-  public async consultarListaComprasConFiltro(
-    usuario: number,
-    estado: string,
-    nombre: string,
-  ): Promise<any> {
-    ValidatorsService.validateRequired(usuario);
+  public async consultarListaComprasConFiltroConPaginacion(
+    filter: FilterListasComprasRequest,
+    page: number,
+    size: number,
+    sort: string,
+  ): Promise<ResultPage<any>> {
+    ValidatorsService.validateRequired(filter.usuario);
 
-    const usuarioExist = await this.usuarioService.usuarioExists(usuario);
+    const usuarioExist = await this.usuarioService.usuarioExists(
+      filter.usuario,
+    );
     if (!usuarioExist) {
       throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
     }
 
-    const usuarioActivo = await this.usuarioService.findById(usuario);
+    const usuarioActivo = await this.usuarioService.findById(filter.usuario);
     if (!usuarioActivo.activo) {
       throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
     }
 
-    return await this.integranteListaCompraService.consultarListaComprasConFiltro(
-      usuario,
-      estado,
-      nombre,
+    return await this.integranteListaCompraService.consultarListaComprasConFiltroConPaginacion(
+      filter,
       ESTADOS_COLABORADORES.APROBADO,
+      page,
+      size,
+      sort,
     );
   }
 

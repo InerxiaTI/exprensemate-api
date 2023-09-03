@@ -16,6 +16,8 @@ import { AgregarColaboradorRequest } from '../dtos/agregar-colaborador.request.'
 import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-colaborador.request.';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
+import { ResultPage } from '../utils/result-page';
+import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -23,19 +25,21 @@ export class ListaCompraController {
   constructor(private readonly service: ListaCompraService) {}
 
   @Get('/filter')
-  public async listarComprasConFiltro(
+  public async consultarListaComprasConFiltroConPaginacion(
+    @Body() filter: FilterListasComprasRequest,
     @Query() query,
-  ): Promise<StandardResponse<any[]>> {
+  ): Promise<StandardResponse<ResultPage<any>>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.consultarListaComprasConFiltro(
-        query['usuario'],
-        query['estado'],
-        query['nombre'],
+      body: await this.service.consultarListaComprasConFiltroConPaginacion(
+        filter,
+        query['page'],
+        query['size'],
+        query['sort'],
       ),
     };
   }
-  
+
   @Get('/filter-mis-listas')
   public async consultarMisListaComprasConFiltro(
     @Query() query,
