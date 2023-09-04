@@ -18,6 +18,9 @@ import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 import { ResultPage } from '../utils/result-page';
 import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
+import { ListaCompraDto } from '../dtos/lista-compra.dto';
+import { IntegranteListaCompraDto } from '../dtos/integrante-lista-compra.dto';
+import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -28,7 +31,7 @@ export class ListaCompraController {
   public async consultarListaComprasConFiltroConPaginacion(
     @Body() filter: FilterListasComprasRequest,
     @Query() query,
-  ): Promise<StandardResponse<ResultPage<any>>> {
+  ): Promise<StandardResponse<ResultPage<ListaCompraDto>>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.consultarListaComprasConFiltroConPaginacion(
@@ -43,7 +46,7 @@ export class ListaCompraController {
   @Get('/filter-mis-listas')
   public async consultarMisListaComprasConFiltro(
     @Query() query,
-  ): Promise<StandardResponse<any[]>> {
+  ): Promise<StandardResponse<ListaCompraDto[]>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.consultarMisListaComprasConFiltro(
@@ -57,7 +60,7 @@ export class ListaCompraController {
   @Post('/crear-lista-compra')
   public async crearListaCompras(
     @Body() crearListaCompraRequest: CrearListaCompraRequest,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<ListaCompraDto>> {
     return {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.CREATED,
@@ -68,7 +71,7 @@ export class ListaCompraController {
   @Post('/solicitud-agregar-colaborador')
   public async agregarIntegranteColaborador(
     @Body() colaboradorRequest: AgregarColaboradorRequest,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.agregarIntegranteColaborador(colaboradorRequest),
@@ -79,7 +82,7 @@ export class ListaCompraController {
   public async aprobarRechazarColaborador(
     @Body()
     aprobarRechazarColaboradorRequest: AprobarRechazarColaboradorRequest,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.aprobarRechazarColaborador(
@@ -92,7 +95,7 @@ export class ListaCompraController {
   public async asignarPorcentajeColaborador(
     @Body()
     asignarPorcentajeColaboradorRequest: AsignarPorcentajeColaboradorRequest,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.asignarPorcentajeColaborador(
@@ -105,7 +108,7 @@ export class ListaCompraController {
   public async consultarIntegrantesListaCompras(
     @Body()
     filtro: ConsultaIntegrantesFilter,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<ConsultaIntegrantesResponse[]>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.consultarIntegrantesListaCompras(filtro),
@@ -115,7 +118,7 @@ export class ListaCompraController {
   @Put('/inicializar-lista-compras')
   public async inicializarListaCompras(
     @Query() query,
-  ): Promise<StandardResponse<any>> {
+  ): Promise<StandardResponse<ListaCompraDto>> {
     return {
       status: HttpStatus.OK,
       body: await this.service.inicializarListaCompras(query['idListaCompras']),

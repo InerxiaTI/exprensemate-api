@@ -11,6 +11,9 @@ import { CrearCompraRequest } from '../dtos/crear-compra.request.';
 import { UsuarioService } from './usuario.service';
 import { CategoriaService } from './categoria.service';
 import { ESTADOS_LISTA_COMPRAS } from '../utils/enums/estados-lista-compras.enum';
+import { plainToClass } from 'class-transformer';
+import { ConsultaComprasResponse } from '../dtos/consulta-compras.response';
+import { CompraDto } from '../dtos/compra.dto';
 
 @Injectable()
 export class CompraService {
@@ -24,7 +27,7 @@ export class CompraService {
 
   public async consultarComprasConFiltro(
     filtroComprasRequest: FiltroComprasRequest,
-  ): Promise<any> {
+  ): Promise<ConsultaComprasResponse[]> {
     ValidatorsService.validateRequired(filtroComprasRequest);
     ValidatorsService.validateRequired(filtroComprasRequest.idListaCompras);
     ValidatorsService.validateRequired(filtroComprasRequest.idUsuarioCompra);
@@ -81,26 +84,29 @@ export class CompraService {
         descripcion: `%${filtroComprasRequest.descripcion}%`,
       });
     }
-    return await sqlQuery.orderBy('compras.fecha_compra', 'DESC').getRawMany();
+    return await sqlQuery
+      .orderBy('compras.fecha_compra', 'DESC')
+      .getRawMany()
+      .then((item) => plainToClass(ConsultaComprasResponse, item));
   }
 
   public async consultarComprasDeListaCompras(
     idListaCompras: number,
-  ): Promise<any> {
+  ): Promise<Compra[]> {
     ValidatorsService.validateRequired(idListaCompras);
     await this.listaCompraService.validateListaCompras(idListaCompras);
 
     const sqlQuery = this.compraRepository
       .createQueryBuilder('compras')
-      .select('compras.id', 'id')
-      .addSelect('compras.lista_compra_fk', 'idListaCompra')
-      .addSelect('compras.categoria_fk', 'idCategoria')
-      .addSelect('compras.usuario_compra_fk', 'idUsuarioCompra')
-      .addSelect('compras.usuario_registro_fk', 'idUsuarioRegistro')
-      .addSelect('compras.fecha_compra', 'fechaCompra')
-      .addSelect('compras.descripcion', 'descripcion')
-      .addSelect('compras.valor', 'valor')
-      .addSelect('compras.fecha_creacion', 'fechaCreacion')
+      .select('compras.id')
+      .addSelect('compras.lista_compra_fk')
+      .addSelect('compras.categoria_fk')
+      .addSelect('compras.usuario_compra_fk')
+      .addSelect('compras.usuario_registro_fk')
+      .addSelect('compras.fecha_compra')
+      .addSelect('compras.descripcion')
+      .addSelect('compras.valor')
+      .addSelect('compras.fecha_creacion')
       .where('compras.lista_compra_fk = :idListaCompras', {
         idListaCompras: idListaCompras,
       });
@@ -116,7 +122,9 @@ export class CompraService {
   }
 
   /*Transactional*/
-  public async crearCompra(compraRequest: CrearCompraRequest): Promise<any> {
+  public async crearCompra(
+    compraRequest: CrearCompraRequest,
+  ): Promise<CompraDto> {
     ValidatorsService.validateRequired(compraRequest);
     ValidatorsService.validateRequired(compraRequest.idListaCompras);
     ValidatorsService.validateRequired(compraRequest.idCategoria);
@@ -163,7 +171,7 @@ export class CompraService {
           compraSaved.listaCompraFk,
         );
         compras.push(compraSaved);
-        await this.listaCompraService.saveTotalCompras(
+        await this.listaCompraService.calcularAndSaveTotalCompras(
           compras,
           compraSaved.listaCompraFk,
           entityManager,
@@ -172,6 +180,17 @@ export class CompraService {
         return compraSaved;
       },
     );
-    return compraSaved;
+
+    return {
+      id: compraSaved.id,
+      descripcion: compraSaved.descripcion,
+      fechaCompra: compraSaved.fechaCompra,
+      fechaCreacion: compraSaved.fechaCreacion,
+      idCategoria: compraSaved.categoriaFk,
+      idListaCompra: compraSaved.listaCompraFk,
+      idUsuarioCompra: compraSaved.usuarioCompraFk,
+      idUsuarioRegistro: compraSaved.usuarioRegistroFk,
+      valor: compraSaved.valor,
+    };
   }
 }

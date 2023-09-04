@@ -6,6 +6,7 @@ import { ValidatorsService } from '../utils/validators.service';
 import { RequestErrorException } from '../utils/exception/request-error.exception';
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
 import { GetUsuarioRequest } from '../dtos/get-usuario.request.';
+import { UsuarioDto } from '../dtos/usuario.dto';
 
 @Injectable()
 export class UsuarioService {
@@ -40,7 +41,9 @@ export class UsuarioService {
     }
   }
 
-  public async getUsuario(getUsuarioRequest: GetUsuarioRequest): Promise<any> {
+  public async getUsuario(
+    getUsuarioRequest: GetUsuarioRequest,
+  ): Promise<UsuarioDto> {
     ValidatorsService.validateRequired(getUsuarioRequest.correo);
     ValidatorsService.validateRequired(getUsuarioRequest.pass);
 
@@ -56,6 +59,13 @@ export class UsuarioService {
     if (!usuario.activo) {
       throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
     }
-    return usuario;
+    return {
+      activo: usuario.activo,
+      apellidos: usuario.apellidos,
+      contrasena: usuario.contrasena,
+      correo: usuario.correo,
+      id: usuario.id,
+      nombres: usuario.nombres,
+    };
   }
 }

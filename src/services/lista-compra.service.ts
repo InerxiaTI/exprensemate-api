@@ -20,6 +20,10 @@ import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.'
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
 import { ResultPage } from '../utils/result-page';
 import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
+import { ListaCompraDto } from '../dtos/lista-compra.dto';
+import { plainToClass } from 'class-transformer';
+import { IntegranteListaCompraDto } from '../dtos/integrante-lista-compra.dto';
+import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
 
 @Injectable()
 export class ListaCompraService {
@@ -36,7 +40,7 @@ export class ListaCompraService {
     page: number,
     size: number,
     sort: string,
-  ): Promise<ResultPage<any>> {
+  ): Promise<ResultPage<ListaCompraDto>> {
     ValidatorsService.validateRequired(filter.usuario);
 
     const usuarioExist = await this.usuarioService.usuarioExists(
@@ -64,7 +68,7 @@ export class ListaCompraService {
     usuarioCreador: number,
     estado: string,
     nombre: string,
-  ): Promise<any> {
+  ): Promise<ListaCompraDto[]> {
     ValidatorsService.validateRequired(usuarioCreador);
 
     await this.usuarioService.validateUser(usuarioCreador);
@@ -77,7 +81,7 @@ export class ListaCompraService {
       .addSelect('listaCompras.estado', 'estado')
       .addSelect('listaCompras.fecha_finalizado', 'fechaFinalizado')
       .addSelect('listaCompras.total_compras', 'totalCompras')
-      .addSelect('listaCompras.usuario_creador_fk', 'usuarioCreador')
+      .addSelect('listaCompras.usuario_creador_fk', 'idUsuarioCreador')
       .addSelect('listaCompras.codigo_generado', 'codigoGenerado')
       .where('listaCompras.usuario_creador_fk = :usuarioCreador', {
         usuarioCreador: usuarioCreador,
@@ -97,7 +101,8 @@ export class ListaCompraService {
 
     return await sqlQuery
       .orderBy('listaCompras.fecha_creacion', 'DESC')
-      .getRawMany();
+      .getRawMany()
+      .then((item) => plainToClass(ListaCompraDto, item));
   }
 
   public async findById(idListaCompra: number): Promise<any> {
@@ -117,7 +122,7 @@ export class ListaCompraService {
   /*Transactional*/
   public async crearListaCompras(
     listaCompra: CrearListaCompraRequest,
-  ): Promise<any> {
+  ): Promise<ListaCompraDto> {
     ValidatorsService.validateRequired(listaCompra.nombre);
     ValidatorsService.validateRequired(listaCompra.usuarioCreador);
 
@@ -128,6 +133,7 @@ export class ListaCompraService {
     listaCompraNew.usuarioCreadorFk = listaCompra.usuarioCreador;
     listaCompraNew.fechaCreacion = new Date();
     listaCompraNew.estado = ESTADOS_LISTA_COMPRAS.CONFIGURANDO;
+    listaCompraNew.totalCompras = 0;
 
     const listaCompraSaved =
       await this.listaCompraRepository.manager.transaction(
@@ -153,11 +159,20 @@ export class ListaCompraService {
           return listaCompraSaved;
         },
       );
-    return listaCompraSaved;
+    return {
+      codigoGenerado: listaCompraSaved.codigoGenerado,
+      estado: listaCompraSaved.estado,
+      fechaCreacion: listaCompraSaved.fechaCreacion,
+      fechaFinalizado: listaCompraSaved.fechaFinalizado,
+      id: listaCompraSaved.id,
+      idUsuarioCreador: listaCompraSaved.usuarioCreadorFk,
+      nombre: listaCompraSaved.nombre,
+      totalCompras: listaCompraSaved.totalCompras,
+    };
   }
 
   /*Transactional*/
-  public async saveTotalCompras(
+  public async calcularAndSaveTotalCompras(
     compras: Compra[],
     idListaCompras: number,
     entityManager: EntityManager,
@@ -181,7 +196,7 @@ export class ListaCompraService {
 
   public async agregarIntegranteColaborador(
     colaboradorRequest: AgregarColaboradorRequest,
-  ): Promise<any> {
+  ): Promise<IntegranteListaCompraDto> {
     ValidatorsService.validateRequired(colaboradorRequest);
     ValidatorsService.validateRequired(colaboradorRequest.codigoGenerado);
     ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
@@ -203,17 +218,24 @@ export class ListaCompraService {
       colaboradorRequest.idUsuarioColaborador,
     );
 
-    const integranteSaved =
+    const integranteSaved: IntegranteListaCompra =
       await this.integranteListaCompraService.agregarIntegranteColaborador(
         colaboradorRequest.idUsuarioColaborador,
         listaCompra,
       );
-    return integranteSaved;
+    return {
+      esCreador: integranteSaved.esCreador,
+      estado: integranteSaved.estado,
+      id: integranteSaved.id,
+      idListaCompra: integranteSaved.listaCompraFk,
+      porcentaje: integranteSaved.porcentaje,
+      idUsuario: integranteSaved.usuarioFk,
+    };
   }
 
   public async aprobarRechazarColaborador(
     colaboradorRequest: AprobarRechazarColaboradorRequest,
-  ): Promise<any> {
+  ): Promise<IntegranteListaCompraDto> {
     ValidatorsService.validateRequired(colaboradorRequest);
     ValidatorsService.validateRequired(colaboradorRequest.idUsuarioCreador);
     ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
@@ -249,12 +271,19 @@ export class ListaCompraService {
       await this.integranteListaCompraService.aprobarRechazarColaborador(
         colaboradorRequest,
       );
-    return integranteSaved;
+    return {
+      esCreador: integranteSaved.esCreador,
+      estado: integranteSaved.estado,
+      id: integranteSaved.id,
+      idListaCompra: integranteSaved.listaCompraFk,
+      porcentaje: integranteSaved.porcentaje,
+      idUsuario: integranteSaved.usuarioFk,
+    };
   }
 
   public async asignarPorcentajeColaborador(
     colaboradorRequest: AsignarPorcentajeColaboradorRequest,
-  ): Promise<any> {
+  ): Promise<IntegranteListaCompraDto> {
     ValidatorsService.validateRequired(colaboradorRequest);
     ValidatorsService.validateRequired(colaboradorRequest.idUsuarioCreador);
     ValidatorsService.validateRequired(colaboradorRequest.idUsuarioColaborador);
@@ -290,25 +319,34 @@ export class ListaCompraService {
       await this.integranteListaCompraService.asignarPorcentajeColaborador(
         colaboradorRequest,
       );
-    return integranteSaved;
+    return {
+      esCreador: integranteSaved.esCreador,
+      estado: integranteSaved.estado,
+      id: integranteSaved.id,
+      idListaCompra: integranteSaved.listaCompraFk,
+      porcentaje: integranteSaved.porcentaje,
+      idUsuario: integranteSaved.usuarioFk,
+    };
   }
 
   public async consultarIntegrantesListaCompras(
     filtro: ConsultaIntegrantesFilter,
-  ): Promise<any> {
+  ): Promise<ConsultaIntegrantesResponse[]> {
     ValidatorsService.validateRequired(filtro);
     ValidatorsService.validateRequired(filtro.idListaCompras);
 
     await this.validateListaCompras(filtro.idListaCompras);
 
     const integrantes =
-      await this.integranteListaCompraService.consultarIntegrantesListaCompras(
+      await this.integranteListaCompraService.filterIntegrantesListaCompras(
         filtro,
       );
     return integrantes;
   }
 
-  public async inicializarListaCompras(idListaCompras: number): Promise<any> {
+  public async inicializarListaCompras(
+    idListaCompras: number,
+  ): Promise<ListaCompraDto> {
     ValidatorsService.validateRequired(idListaCompras);
     await this.validateListaCompras(idListaCompras);
 
@@ -335,11 +373,20 @@ export class ListaCompraService {
       );
     }
 
-    const listaCompras = await this.cambiarEstadoListaCompras(
+    const listaCompras: ListaCompra = await this.cambiarEstadoListaCompras(
       idListaCompras,
       ESTADOS_LISTA_COMPRAS.PENDIENTE,
     );
-    return listaCompras;
+    return {
+      codigoGenerado: listaCompras.codigoGenerado,
+      estado: listaCompras.estado,
+      fechaCreacion: listaCompras.fechaCreacion,
+      fechaFinalizado: listaCompras.fechaFinalizado,
+      id: listaCompras.id,
+      idUsuarioCreador: 0,
+      nombre: listaCompras.nombre,
+      totalCompras: listaCompras.totalCompras,
+    };
   }
 
   private async getIntegrantesPorEstado(

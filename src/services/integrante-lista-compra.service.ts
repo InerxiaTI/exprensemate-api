@@ -14,6 +14,9 @@ import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
 import { ResultPage } from '../utils/result-page';
 import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
+import { plainToClass } from 'class-transformer';
+import { ListaCompraDto } from '../dtos/lista-compra.dto';
+import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
 
 @Injectable()
 export class IntegranteListaCompraService {
@@ -68,7 +71,7 @@ export class IntegranteListaCompraService {
     page = 1,
     size = 10,
     sort = 'id,ASC',
-  ): Promise<ResultPage<any>> {
+  ): Promise<ResultPage<ListaCompraDto>> {
     const sqlQuery = this.integranteListaCompraRepository
       .createQueryBuilder('integrantes')
       .select('listaCompras.id', 'id')
@@ -77,7 +80,7 @@ export class IntegranteListaCompraService {
       .addSelect('listaCompras.estado', 'estado')
       .addSelect('listaCompras.fecha_finalizado', 'fechaFinalizado')
       .addSelect('listaCompras.total_compras', 'totalCompras')
-      .addSelect('listaCompras.usuario_creador_fk', 'usuarioCreador')
+      .addSelect('listaCompras.usuario_creador_fk', 'idUsuarioCreador')
       .addSelect('listaCompras.codigo_generado', 'codigoGenerado')
       .innerJoin('integrantes.listaCompra', 'listaCompras')
       .where('integrantes.usuario_fk = :usuario', {
@@ -110,7 +113,8 @@ export class IntegranteListaCompraService {
 
     const result = await sqlQuery
       .orderBy(`listaCompras.${sortField}`, sortOrder)
-      .getRawMany();
+      .getRawMany()
+      .then((item) => plainToClass(ListaCompraDto, item));
 
     return {
       page: page,
@@ -283,9 +287,50 @@ export class IntegranteListaCompraService {
     );
   }
 
+  public async filterIntegrantesListaCompras(
+    filtro: ConsultaIntegrantesFilter,
+  ): Promise<ConsultaIntegrantesResponse[]> {
+    ValidatorsService.validateRequired(filtro.idListaCompras);
+
+    const sqlQuery = this.integranteListaCompraRepository
+      .createQueryBuilder('integrantesListaCompra')
+      .select('integrantesListaCompra.id', 'id')
+      .addSelect('integrantesListaCompra.lista_compra_fk', 'idListaCompra')
+      .addSelect('integrantesListaCompra.usuario_fk', 'idUsuario')
+      .addSelect('integrantesListaCompra.porcentaje', 'porcentaje')
+      .addSelect('integrantesListaCompra.estado', 'estado')
+      .addSelect('integrantesListaCompra.es_creador', 'esCreador')
+      .addSelect('usuario.nombres', 'nombres')
+      .addSelect('usuario.apellidos', 'apellidos')
+      .innerJoin('integrantesListaCompra.usuario', 'usuario')
+      .where('integrantesListaCompra.lista_compra_fk = :idListaCompras', {
+        idListaCompras: filtro.idListaCompras,
+      });
+
+    if (filtro.estados && filtro.estados.length > 0) {
+      sqlQuery.andWhere('integrantesListaCompra.estado IN (:...estados)', {
+        estados: filtro.estados,
+      });
+    }
+
+    if (filtro.nombres) {
+      sqlQuery.andWhere(
+        '(usuario.nombres like :nombres OR usuario.apellidos like :nombres)',
+        {
+          nombres: `%${filtro.nombres}%`,
+        },
+      );
+    }
+
+    return await sqlQuery
+      .orderBy('integrantesListaCompra.porcentaje', 'DESC')
+      .getRawMany()
+      .then((item) => plainToClass(ConsultaIntegrantesResponse, item));
+  }
+
   public async consultarIntegrantesListaCompras(
     filtro: ConsultaIntegrantesFilter,
-  ): Promise<any> {
+  ): Promise<IntegranteListaCompra[]> {
     ValidatorsService.validateRequired(filtro.idListaCompras);
 
     const sqlQuery = this.integranteListaCompraRepository
