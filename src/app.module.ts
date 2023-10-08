@@ -28,6 +28,8 @@ import { UsuarioController } from './controllers/usuario.controller';
 import { DataSource } from 'typeorm';
 import { CodigoAleatorioService } from './utils/codigo-aleatorio.service';
 import { ValidatorsService } from './utils/validators.service';
+import { ListaCompraFacade } from './facades/lista-compra.facade';
+import { CompraFacade } from './facades/compra.facade';
 
 @Module({
   imports: [
@@ -87,6 +89,8 @@ import { ValidatorsService } from './utils/validators.service';
     Logger,
     CodigoAleatorioService,
     ValidatorsService,
+    ListaCompraFacade,
+    CompraFacade,
   ],
 })
 export class AppModule {

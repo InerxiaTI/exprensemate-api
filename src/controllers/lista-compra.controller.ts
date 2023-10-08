@@ -21,11 +21,12 @@ import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.reques
 import { ListaCompraDto } from '../dtos/lista-compra.dto';
 import { IntegranteListaCompraDto } from '../dtos/integrante-lista-compra.dto';
 import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
+import { ListaCompraFacade } from "../facades/lista-compra.facade";
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
 export class ListaCompraController {
-  constructor(private readonly service: ListaCompraService) {}
+  constructor(private readonly facade: ListaCompraFacade) {}
 
   @Get('/filter')
   public async consultarListaComprasConFiltroConPaginacion(
@@ -34,7 +35,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<ResultPage<ListaCompraDto>>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.consultarListaComprasConFiltroConPaginacion(
+      body: await this.facade.consultarListaComprasConFiltroConPaginacion(
         filter,
         query['page'],
         query['size'],
@@ -49,7 +50,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<ListaCompraDto[]>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.consultarMisListaComprasConFiltro(
+      body: await this.facade.consultarMisListaComprasConFiltro(
         query['usuarioCreador'],
         query['estado'],
         query['nombre'],
@@ -64,7 +65,7 @@ export class ListaCompraController {
     return {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.CREATED,
-      body: await this.service.crearListaCompras(crearListaCompraRequest),
+      body: await this.facade.crearListaCompras(crearListaCompraRequest),
     };
   }
 
@@ -74,7 +75,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.agregarIntegranteColaborador(colaboradorRequest),
+      body: await this.facade.agregarIntegranteColaborador(colaboradorRequest),
     };
   }
 
@@ -85,7 +86,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.aprobarRechazarColaborador(
+      body: await this.facade.aprobarRechazarColaborador(
         aprobarRechazarColaboradorRequest,
       ),
     };
@@ -98,7 +99,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<IntegranteListaCompraDto>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.asignarPorcentajeColaborador(
+      body: await this.facade.asignarPorcentajeColaborador(
         asignarPorcentajeColaboradorRequest,
       ),
     };
@@ -111,7 +112,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<ConsultaIntegrantesResponse[]>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.consultarIntegrantesListaCompras(filtro),
+      body: await this.facade.consultarIntegrantesListaCompras(filtro),
     };
   }
 
@@ -121,7 +122,7 @@ export class ListaCompraController {
   ): Promise<StandardResponse<ListaCompraDto>> {
     return {
       status: HttpStatus.OK,
-      body: await this.service.inicializarListaCompras(query['idListaCompras']),
+      body: await this.facade.inicializarListaCompras(query['idListaCompras']),
     };
   }
 }

@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { IntegranteListaCompra } from '../entities/integrante-lista-compra';
 import { ValidatorsService } from '../utils/validators.service';
 import { RequestErrorException } from '../utils/exception/request-error.exception';
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
-import { UsuarioService } from './usuario.service';
 import { ListaCompra } from '../entities/lista-compra';
 import { BusinessException } from '../utils/exception/business.exception';
 import { ESTADOS_COLABORADORES } from '../utils/enums/estados-colaboradores.enum';
@@ -23,47 +22,7 @@ export class IntegranteListaCompraService {
   constructor(
     @InjectRepository(IntegranteListaCompra)
     private integranteListaCompraRepository: Repository<IntegranteListaCompra>,
-    private usuarioService: UsuarioService,
   ) {}
-
-  public async consultarListaComprasConFiltro(
-    usuario: number,
-    estado: string,
-    nombre: string,
-    estadoIntegrante: string,
-  ): Promise<any> {
-    const sqlQuery = this.integranteListaCompraRepository
-      .createQueryBuilder('integrantes')
-      .select('listaCompras.id', 'id')
-      .addSelect('listaCompras.nombre', 'nombre')
-      .addSelect('listaCompras.fecha_creacion', 'fechaCreacion')
-      .addSelect('listaCompras.estado', 'estado')
-      .addSelect('listaCompras.fecha_finalizado', 'fechaFinalizado')
-      .addSelect('listaCompras.total_compras', 'totalCompras')
-      .addSelect('listaCompras.usuario_creador_fk', 'usuarioCreador')
-      .addSelect('listaCompras.codigo_generado', 'codigoGenerado')
-      .innerJoin('integrantes.listaCompra', 'listaCompras')
-      .where('integrantes.usuario_fk = :usuario', {
-        usuario: usuario,
-      })
-      .andWhere('integrantes.estado = :estado', {
-        estado: estadoIntegrante,
-      });
-
-    if (estado || estado === '') {
-      sqlQuery.andWhere('listaCompras.estado = :estado', {
-        estado: estado,
-      });
-    }
-
-    if (nombre || nombre === '') {
-      sqlQuery.andWhere('listaCompras.nombre like :nombre', {
-        nombre: `%${nombre}%`,
-      });
-    }
-
-    return await sqlQuery.orderBy('listaCompras.id', 'ASC').getRawMany();
-  }
 
   async consultarListaComprasConFiltroConPaginacion(
     filter: FilterListasComprasRequest,
@@ -126,45 +85,10 @@ export class IntegranteListaCompraService {
     };
   }
 
-  /*Transactional*/
-  public async agregarIntegranteCreador(
-    integranteNew: IntegranteListaCompra,
-    entityManager: EntityManager,
-  ) {
-    ValidatorsService.validateRequired(integranteNew.usuarioFk);
-    ValidatorsService.validateRequired(integranteNew.listaCompraFk);
-
-    const usuarioExist = await this.usuarioService.usuarioExists(
-      integranteNew.usuarioFk,
-    );
-    if (!usuarioExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
-    }
-
-    const usuario = await this.usuarioService.findById(integranteNew.usuarioFk);
-    if (!usuario.activo) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_ACTIVE);
-    }
-
-    integranteNew.porcentaje = 100;
-    integranteNew.estado = ESTADOS_COLABORADORES.APROBADO;
-    integranteNew.esCreador = true;
-
-    await entityManager.save(integranteNew);
-  }
-
   public async agregarIntegranteColaborador(
     idUsuarioColaborador: number,
     listaCompra: ListaCompra,
   ): Promise<any> {
-    ValidatorsService.validateRequired(idUsuarioColaborador);
-
-    if (listaCompra.usuarioCreadorFk === idUsuarioColaborador) {
-      throw new BusinessException(
-        MESSAGES_EXCEPTION.DUPLICATE_USER_ON_PURCHASE_LIST,
-      );
-    }
-
     const estados = [
       ESTADOS_COLABORADORES.APROBADO,
       ESTADOS_COLABORADORES.PENDIENTE,
@@ -290,8 +214,6 @@ export class IntegranteListaCompraService {
   public async filterIntegrantesListaCompras(
     filtro: ConsultaIntegrantesFilter,
   ): Promise<ConsultaIntegrantesResponse[]> {
-    ValidatorsService.validateRequired(filtro.idListaCompras);
-
     const sqlQuery = this.integranteListaCompraRepository
       .createQueryBuilder('integrantesListaCompra')
       .select('integrantesListaCompra.id', 'id')
@@ -368,7 +290,7 @@ export class IntegranteListaCompraService {
       .getRawMany();
   }
 
-  public async findByListaCompraAndUsuario(
+  private async findByListaCompraAndUsuario(
     idListaCompra: number,
     idUsuario,
   ): Promise<any> {
