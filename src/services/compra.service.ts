@@ -7,6 +7,7 @@ import { CrearCompraRequest } from '../dtos/crear-compra.request.';
 import { plainToClass } from 'class-transformer';
 import { ConsultaComprasResponse } from '../dtos/consulta-compras.response';
 import { ListaCompra } from '../entities/lista-compra';
+import { EditarCompraRequest } from '../dtos/editar-compra.request.';
 
 @Injectable()
 export class CompraService {
@@ -73,20 +74,23 @@ export class CompraService {
   ): Promise<Compra[]> {
     const sqlQuery = this.compraRepository
       .createQueryBuilder('compras')
-      .select('compras.id')
-      .addSelect('compras.lista_compra_fk')
-      .addSelect('compras.categoria_fk')
-      .addSelect('compras.usuario_compra_fk')
-      .addSelect('compras.usuario_registro_fk')
-      .addSelect('compras.fecha_compra')
-      .addSelect('compras.descripcion')
-      .addSelect('compras.valor')
-      .addSelect('compras.fecha_creacion')
+      .select('compras.id', 'id')
+      .addSelect('compras.lista_compra_fk', 'listaCompraFk')
+      .addSelect('compras.categoria_fk', 'categoriaFk')
+      .addSelect('compras.usuario_compra_fk', 'usuarioCompraFk')
+      .addSelect('compras.usuario_registro_fk', 'usuarioRegistroFk')
+      .addSelect('compras.fecha_compra', 'fechaCompra')
+      .addSelect('compras.descripcion', 'descripcion')
+      .addSelect('compras.valor', 'valor')
+      .addSelect('compras.fecha_creacion', 'fechaCreacion')
       .where('compras.lista_compra_fk = :idListaCompras', {
         idListaCompras: idListaCompras,
       });
 
-    return await sqlQuery.orderBy('compras.fecha_compra', 'DESC').getRawMany();
+    return await sqlQuery
+      .orderBy('compras.fecha_compra', 'DESC')
+      .getRawMany()
+      .then((item) => plainToClass(Compra, item));
   }
 
   /*Transactional*/
@@ -124,6 +128,44 @@ export class CompraService {
     return compraSaved;
   }
 
+  /*Transactional*/
+  public async editarCompra(
+    compraRequest: EditarCompraRequest,
+    listaCompras: ListaCompra,
+  ): Promise<Compra> {
+    const compraOld = await this.findById(compraRequest.idCompra);
+
+    compraOld.categoriaFk = compraRequest.idCategoria;
+    compraOld.usuarioCompraFk = compraRequest.idUsuarioCompra;
+    compraOld.usuarioRegistroFk = compraRequest.idUsuarioRegistro;
+    compraOld.fechaCompra = compraRequest.fechaCompra;
+    compraOld.descripcion = compraRequest.descripcion;
+    compraOld.valor = compraRequest.valor;
+
+    const compraSaved = await this.compraRepository.manager.transaction(
+      async (entityManager) => {
+        const compraSaved = await entityManager.save(compraOld);
+
+        const compras: Compra[] = await this.consultarComprasDeListaCompras(
+          compraSaved.listaCompraFk,
+        );
+
+        const indice = compras.findIndex((c) => c.id === compraSaved.id);
+        if (indice !== -1) {
+          compras[indice] = compraSaved;
+        }
+        await this.calcularAndSaveTotalCompras(
+          compras,
+          listaCompras,
+          entityManager,
+        );
+
+        return compraSaved;
+      },
+    );
+    return compraSaved;
+  }
+
   private async calcularAndSaveTotalCompras(
     compras: Compra[],
     listaCompras: ListaCompra,
@@ -135,5 +177,13 @@ export class CompraService {
     );
     listaCompras.totalCompras = totalCompras;
     await entityManager.save(listaCompras);
+  }
+
+  public async findById(idCompra: number): Promise<Compra> {
+    return await this.compraRepository.findOne({
+      where: {
+        id: idCompra,
+      },
+    });
   }
 }

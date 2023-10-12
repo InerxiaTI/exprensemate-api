@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { StandardResponse } from '../utils/http-response/standard-response';
 import { FiltroComprasRequest } from '../dtos/filtro-compras.request.';
@@ -7,6 +7,7 @@ import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
 import { ConsultaComprasResponse } from '../dtos/consulta-compras.response';
 import { CompraDto } from '../dtos/compra.dto';
 import { CompraFacade } from '../facades/compra.facade';
+import { EditarCompraRequest } from '../dtos/editar-compra.request.';
 
 @ApiTags('Compras')
 @Controller('api/compra')
@@ -31,6 +32,17 @@ export class CompraController {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.CREATED,
       body: await this.facade.crearCompra(compraRequest),
+    };
+  }
+
+  @Put('/editar-compra')
+  public async editarCompra(
+    @Body() compraRequest: EditarCompraRequest,
+  ): Promise<StandardResponse<CompraDto>> {
+    return {
+      status: HttpStatus.OK,
+      message: MESSAGES_RESPONSE.UPDATED,
+      body: await this.facade.editarCompra(compraRequest),
     };
   }
 }

@@ -11,6 +11,7 @@ import { CompraDto } from '../dtos/compra.dto';
 import { RequestErrorException } from '../utils/exception/request-error.exception';
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
 import { ESTADOS_LISTA_COMPRAS } from '../utils/enums/estados-lista-compras.enum';
+import { EditarCompraRequest } from '../dtos/editar-compra.request.';
 
 @Injectable()
 export class CompraFacade {
@@ -86,6 +87,62 @@ export class CompraFacade {
     }
 
     const compraSaved = await this.compraService.crearCompra(
+      compraRequest,
+      listaCompra,
+    );
+
+    return {
+      id: compraSaved.id,
+      descripcion: compraSaved.descripcion,
+      fechaCompra: compraSaved.fechaCompra,
+      fechaCreacion: compraSaved.fechaCreacion,
+      idCategoria: compraSaved.categoriaFk,
+      idListaCompra: compraSaved.listaCompraFk,
+      idUsuarioCompra: compraSaved.usuarioCompraFk,
+      idUsuarioRegistro: compraSaved.usuarioRegistroFk,
+      valor: compraSaved.valor,
+    };
+  }
+
+  /*Transactional*/
+  public async editarCompra(
+    compraRequest: EditarCompraRequest,
+  ): Promise<CompraDto> {
+    ValidatorsService.validateRequired(compraRequest);
+    ValidatorsService.validateRequired(compraRequest.idCompra);
+    ValidatorsService.validateRequired(compraRequest.idUsuarioRegistro);
+
+    const compra = await this.compraService.findById(compraRequest.idCompra);
+
+    await this.listaCompraService.validateListaCompras(compra.listaCompraFk);
+
+    if (compraRequest.idUsuarioCompra) {
+      await this.usuarioService.validateUser(compraRequest.idUsuarioCompra);
+    }
+    if (compraRequest.idUsuarioRegistro) {
+      await this.usuarioService.validateUser(compraRequest.idUsuarioRegistro);
+    }
+    if (compraRequest.idCategoria) {
+      await this.validateCategoria(compraRequest.idCategoria);
+    }
+
+    if (compraRequest.valor <= 0) {
+      throw new RequestErrorException(MESSAGES_EXCEPTION.AMOUNT_NOT_ALLOWED);
+    }
+
+    const listaCompra = await this.listaCompraService.findById(
+      compra.listaCompraFk,
+    );
+
+    await this.listaCompraService.validateListaCompras(listaCompra.id);
+
+    if (listaCompra.estado !== ESTADOS_LISTA_COMPRAS.PENDIENTE) {
+      throw new RequestErrorException(
+        MESSAGES_EXCEPTION.ADD_PURCHASE_NOT_ALLOWED,
+      );
+    }
+
+    const compraSaved = await this.compraService.editarCompra(
       compraRequest,
       listaCompra,
     );
