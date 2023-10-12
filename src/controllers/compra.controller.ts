@@ -1,4 +1,12 @@
-import { Body, Controller, HttpStatus, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { StandardResponse } from '../utils/http-response/standard-response';
 import { FiltroComprasRequest } from '../dtos/filtro-compras.request.';
@@ -43,6 +51,17 @@ export class CompraController {
       status: HttpStatus.OK,
       message: MESSAGES_RESPONSE.UPDATED,
       body: await this.facade.editarCompra(compraRequest),
+    };
+  }
+
+  @Delete('/eliminar-compra/:idCompra')
+  public async eliminarCompra(
+    @Param('idCompra') idCompra: number,
+  ): Promise<StandardResponse<CompraDto>> {
+    await this.facade.eliminarCompra(idCompra);
+    return {
+      status: HttpStatus.OK,
+      message: MESSAGES_RESPONSE.DELETED,
     };
   }
 }

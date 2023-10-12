@@ -166,6 +166,29 @@ export class CompraService {
     return compraSaved;
   }
 
+  /*Transactional*/
+  public async eliminarCompra(idCompra: number, listaCompras: ListaCompra) {
+    const compra = await this.findById(idCompra);
+
+    await this.compraRepository.manager.transaction(async (entityManager) => {
+      await entityManager.delete(Compra, compra);
+
+      const compras: Compra[] = await this.consultarComprasDeListaCompras(
+        compra.listaCompraFk,
+      );
+
+      const indice = compras.findIndex((c) => c.id === compra.id);
+      if (indice !== -1) {
+        compras.splice(indice, 1);
+      }
+      await this.calcularAndSaveTotalCompras(
+        compras,
+        listaCompras,
+        entityManager,
+      );
+    });
+  }
+
   private async calcularAndSaveTotalCompras(
     compras: Compra[],
     listaCompras: ListaCompra,

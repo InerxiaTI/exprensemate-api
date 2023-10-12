@@ -12,6 +12,7 @@ import { RequestErrorException } from '../utils/exception/request-error.exceptio
 import { MESSAGES_EXCEPTION } from '../utils/exception/messages-exception.enum';
 import { ESTADOS_LISTA_COMPRAS } from '../utils/enums/estados-lista-compras.enum';
 import { EditarCompraRequest } from '../dtos/editar-compra.request.';
+import { BusinessException } from '../utils/exception/business.exception';
 
 @Injectable()
 export class CompraFacade {
@@ -61,9 +62,6 @@ export class CompraFacade {
     ValidatorsService.validateRequired(compraRequest.fechaCompra);
     ValidatorsService.validateRequired(compraRequest.valor);
 
-    await this.listaCompraService.validateListaCompras(
-      compraRequest.idListaCompras,
-    );
     await this.usuarioService.validateUser(compraRequest.idUsuarioCompra);
     await this.usuarioService.validateUser(compraRequest.idUsuarioRegistro);
     await this.validateCategoria(compraRequest.idCategoria);
@@ -113,8 +111,9 @@ export class CompraFacade {
     ValidatorsService.validateRequired(compraRequest.idUsuarioRegistro);
 
     const compra = await this.compraService.findById(compraRequest.idCompra);
-
-    await this.listaCompraService.validateListaCompras(compra.listaCompraFk);
+    if (!compra) {
+      throw new BusinessException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
 
     if (compraRequest.idUsuarioCompra) {
       await this.usuarioService.validateUser(compraRequest.idUsuarioCompra);
@@ -158,5 +157,29 @@ export class CompraFacade {
       idUsuarioRegistro: compraSaved.usuarioRegistroFk,
       valor: compraSaved.valor,
     };
+  }
+
+  /*Transactional*/
+  public async eliminarCompra(idCompra: number) {
+    ValidatorsService.validateRequired(idCompra);
+
+    const compra = await this.compraService.findById(idCompra);
+    if (!compra) {
+      throw new BusinessException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+    }
+
+    await this.listaCompraService.validateListaCompras(compra.listaCompraFk);
+
+    const listaCompra = await this.listaCompraService.findById(
+      compra.listaCompraFk,
+    );
+
+    if (listaCompra.estado !== ESTADOS_LISTA_COMPRAS.PENDIENTE) {
+      throw new RequestErrorException(
+        MESSAGES_EXCEPTION.ADD_PURCHASE_NOT_ALLOWED,
+      );
+    }
+
+    await this.compraService.eliminarCompra(idCompra, listaCompra);
   }
 }
