@@ -8,7 +8,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ListaCompraService } from '../services/lista-compra.service';
 import { StandardResponse } from '../utils/http-response/standard-response';
 import { CrearListaCompraRequest } from '../dtos/crear-lista-compra.request.';
 import { MESSAGES_RESPONSE } from '../utils/enums/messages-response.enum';
@@ -20,8 +19,7 @@ import { ResultPage } from '../utils/result-page';
 import { FilterListasComprasRequest } from '../dtos/filter-listas-compras.request';
 import { ListaCompraDto } from '../dtos/lista-compra.dto';
 import { IntegranteListaCompraDto } from '../dtos/integrante-lista-compra.dto';
-import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
-import { ListaCompraFacade } from "../facades/lista-compra.facade";
+import { ListaCompraFacade } from '../facades/lista-compra.facade';
 
 @ApiTags('Lista de compras')
 @Controller('api/lista-compra')
@@ -105,14 +103,14 @@ export class ListaCompraController {
     };
   }
 
-  @Post('/filter-integrantes')
-  public async consultarIntegrantesListaCompras(
+  @Post('/filter-integrantes-total-compras')
+  public async consultarIntegrantesWithTotalCompras(
     @Body()
     filtro: ConsultaIntegrantesFilter,
-  ): Promise<StandardResponse<ConsultaIntegrantesResponse[]>> {
+  ): Promise<StandardResponse<any[]>> {
     return {
       status: HttpStatus.OK,
-      body: await this.facade.consultarIntegrantesListaCompras(filtro),
+      body: await this.facade.consultarIntegrantesWithTotalCompras(filtro),
     };
   }
 

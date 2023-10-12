@@ -265,16 +265,16 @@ export class ListaCompraFacade {
     };
   }
 
-  public async consultarIntegrantesListaCompras(
+  public async consultarIntegrantesWithTotalCompras(
     filtro: ConsultaIntegrantesFilter,
-  ): Promise<ConsultaIntegrantesResponse[]> {
+  ): Promise<any[]> {
     ValidatorsService.validateRequired(filtro);
     ValidatorsService.validateRequired(filtro.idListaCompras);
 
     await this.listaCompraService.validateListaCompras(filtro.idListaCompras);
 
     const integrantes =
-      await this.integranteListaCompraService.filterIntegrantesListaCompras(
+      await this.integranteListaCompraService.consultarIntegrantesWithTotalCompras(
         filtro,
       );
     return integrantes;

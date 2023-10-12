@@ -211,43 +211,37 @@ export class IntegranteListaCompraService {
     );
   }
 
-  public async filterIntegrantesListaCompras(
+  public async consultarIntegrantesWithTotalCompras(
     filtro: ConsultaIntegrantesFilter,
   ): Promise<ConsultaIntegrantesResponse[]> {
     const sqlQuery = this.integranteListaCompraRepository
-      .createQueryBuilder('integrantesListaCompra')
-      .select('integrantesListaCompra.id', 'id')
-      .addSelect('integrantesListaCompra.lista_compra_fk', 'idListaCompra')
-      .addSelect('integrantesListaCompra.usuario_fk', 'idUsuario')
-      .addSelect('integrantesListaCompra.porcentaje', 'porcentaje')
-      .addSelect('integrantesListaCompra.estado', 'estado')
-      .addSelect('integrantesListaCompra.es_creador', 'esCreador')
-      .addSelect('usuario.nombres', 'nombres')
-      .addSelect('usuario.apellidos', 'apellidos')
-      .innerJoin('integrantesListaCompra.usuario', 'usuario')
-      .where('integrantesListaCompra.lista_compra_fk = :idListaCompras', {
+      .createQueryBuilder('ilc')
+      .select('ilc.id', 'id')
+      .addSelect('ilc.lista_compra_fk', 'idListaCompra')
+      .addSelect('ilc.usuario_fk', 'idUsuario')
+      .addSelect('ilc.porcentaje', 'porcentaje')
+      .addSelect('ilc.estado', 'estado')
+      .addSelect('ilc.es_creador', 'esCreador')
+      .addSelect('SUM(c.valor)', 'total_compras')
+      .leftJoin(
+        'compras',
+        'c',
+        'ilc.listaCompraFk = c.listaCompraFk AND ilc.usuarioFk = c.usuarioCompraFk',
+      )
+      .where('ilc.listaCompraFk = :idListaCompras', {
         idListaCompras: filtro.idListaCompras,
-      });
+      })
+      .groupBy(
+        'ilc.id, ilc.listaCompraFk, ilc.usuarioFk, ilc.porcentaje, ilc.estado, ilc.esCreador',
+      );
 
     if (filtro.estados && filtro.estados.length > 0) {
-      sqlQuery.andWhere('integrantesListaCompra.estado IN (:...estados)', {
+      sqlQuery.andWhere('ilc.estado IN (:...estados)', {
         estados: filtro.estados,
       });
     }
 
-    if (filtro.nombres) {
-      sqlQuery.andWhere(
-        '(usuario.nombres like :nombres OR usuario.apellidos like :nombres)',
-        {
-          nombres: `%${filtro.nombres}%`,
-        },
-      );
-    }
-
-    return await sqlQuery
-      .orderBy('integrantesListaCompra.porcentaje', 'DESC')
-      .getRawMany()
-      .then((item) => plainToClass(ConsultaIntegrantesResponse, item));
+    return await sqlQuery.getRawMany();
   }
 
   public async consultarIntegrantesListaCompras(
