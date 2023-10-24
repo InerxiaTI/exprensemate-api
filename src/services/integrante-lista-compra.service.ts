@@ -223,6 +223,9 @@ export class IntegranteListaCompraService {
       .addSelect('ilc.estado', 'estado')
       .addSelect('ilc.es_creador', 'esCreador')
       .addSelect('SUM(c.valor)', 'total_compras')
+      .addSelect('usuario.nombres', 'nombres')
+      .addSelect('usuario.apellidos', 'apellidos')
+      .innerJoin('ilc.usuario', 'usuario')
       .leftJoin(
         'compras',
         'c',
@@ -232,7 +235,7 @@ export class IntegranteListaCompraService {
         idListaCompras: filtro.idListaCompras,
       })
       .groupBy(
-        'ilc.id, ilc.listaCompraFk, ilc.usuarioFk, ilc.porcentaje, ilc.estado, ilc.esCreador',
+        'ilc.id, ilc.listaCompraFk, ilc.usuarioFk, ilc.porcentaje, ilc.estado, ilc.esCreador, usuario.nombres, usuario.apellidos',
       );
 
     if (filtro.estados && filtro.estados.length > 0) {
