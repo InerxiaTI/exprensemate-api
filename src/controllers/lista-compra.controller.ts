@@ -26,7 +26,7 @@ import { ListaCompraFacade } from '../facades/lista-compra.facade';
 export class ListaCompraController {
   constructor(private readonly facade: ListaCompraFacade) {}
 
-  @Get('/filter')
+  @Post('/filter')
   public async consultarListaComprasConFiltroConPaginacion(
     @Body() filter: FilterListasComprasRequest,
     @Query() query,
