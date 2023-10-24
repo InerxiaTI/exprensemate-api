@@ -132,7 +132,7 @@ export class IntegranteListaCompraService {
     );
 
     if (!integrante) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.MEMBER_NOT_FOUND);
     }
 
     if (colaboradorRequest.aprobar) {
@@ -156,7 +156,7 @@ export class IntegranteListaCompraService {
     );
 
     if (!integrante) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.MEMBER_NOT_FOUND);
     }
 
     if (integrante.estado === ESTADOS_COLABORADORES.RECHAZADO) {

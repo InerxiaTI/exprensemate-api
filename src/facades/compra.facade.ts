@@ -46,7 +46,7 @@ export class CompraFacade {
   private async validateCategoria(idCategoria: number) {
     const categoria = await this.categoriaService.categoriaExists(idCategoria);
     if (!categoria) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.CATEGORY_NOT_FOUND);
     }
   }
 
@@ -112,7 +112,7 @@ export class CompraFacade {
 
     const compra = await this.compraService.findById(compraRequest.idCompra);
     if (!compra) {
-      throw new BusinessException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new BusinessException(MESSAGES_EXCEPTION.PURCHASE_NOT_FOUND);
     }
 
     if (compraRequest.idUsuarioCompra) {
@@ -165,7 +165,7 @@ export class CompraFacade {
 
     const compra = await this.compraService.findById(idCompra);
     if (!compra) {
-      throw new BusinessException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new BusinessException(MESSAGES_EXCEPTION.PURCHASE_NOT_FOUND);
     }
 
     await this.listaCompraService.validateListaCompras(compra.listaCompraFk);

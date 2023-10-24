@@ -32,7 +32,7 @@ export class UsuarioService {
   public async validateUser(idUsuario: number) {
     const usuarioExist = await this.usuarioExists(idUsuario);
     if (!usuarioExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_FOUND);
     }
 
     const usuario = await this.findById(idUsuario);

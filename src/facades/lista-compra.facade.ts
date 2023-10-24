@@ -20,7 +20,6 @@ import { AprobarRechazarColaboradorRequest } from '../dtos/aprobar-rechazar-cola
 import { BusinessException } from '../utils/exception/business.exception';
 import { AsignarPorcentajeColaboradorRequest } from '../dtos/asignar-porcentaje-colaborador.request.';
 import { ConsultaIntegrantesFilter } from '../dtos/consulta-integrantes.filter.';
-import { ConsultaIntegrantesResponse } from '../dtos/consulta-integrantes.response';
 
 @Injectable()
 export class ListaCompraFacade {
@@ -43,7 +42,7 @@ export class ListaCompraFacade {
       filter.usuario,
     );
     if (!usuarioExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.USER_NOT_FOUND);
     }
 
     const usuarioActivo = await this.usuarioService.findById(filter.usuario);
@@ -129,7 +128,7 @@ export class ListaCompraFacade {
       colaboradorRequest.codigoGenerado,
     );
     if (!listaCompra) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.LIST_NOT_FOUND);
     }
 
     if (listaCompra.estado !== ESTADOS_LISTA_COMPRAS.CONFIGURANDO) {

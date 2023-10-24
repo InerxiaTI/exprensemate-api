@@ -136,7 +136,7 @@ export class ListaCompraService {
   public async validateListaCompras(idListaCompras: number) {
     const listaCompraExist = await this.listaCompraExists(idListaCompras);
     if (!listaCompraExist) {
-      throw new RequestErrorException(MESSAGES_EXCEPTION.DATA_NOT_FOUND);
+      throw new RequestErrorException(MESSAGES_EXCEPTION.LIST_NOT_FOUND);
     }
   }
 }
